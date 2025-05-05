@@ -29,8 +29,6 @@ public class MaterialService {
 
     private final MaterialValidator materialValidator;
 
-    private final AwsS3Service awsS3Service; // Assuming you have AWS S3 service implemented
-
     private static final int RATE_LIMIT_WINDOW = 60; // seconds
     private static final int RATE_LIMIT_COUNT = 5; // requests
     private static final int MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -38,10 +36,9 @@ public class MaterialService {
     private final ThreadLocal<Instant> lastRequestTime = new ThreadLocal<>();
     private final ThreadLocal<Integer> requestCount = new ThreadLocal<>();
 
-    public MaterialService(MaterialRepository materialRepository, MaterialValidator materialValidator, AwsS3Service awsS3Service) {
+    public MaterialService(MaterialRepository materialRepository, MaterialValidator materialValidator) {
         this.materialRepository = materialRepository;
         this.materialValidator = materialValidator;
-        this.awsS3Service = awsS3Service;
     }
 
     private void applyRateLimit() {
@@ -86,17 +83,9 @@ public class MaterialService {
         material.setFileSize(file.getSize());
         material.setUploadedBy(request.getUploadedBy());
         material.setUploadedDate(new Date());
-
-        try {
-            // Create a unique key using material code
-            String key = "materials/" + request.getMaterialCode();
-            
-            // Upload file to S3
-            String s3Url = awsS3Service.uploadFile(file, key);
-            material.setUrl(s3Url);
-        } catch (IOException e) {
-            throw new ApiException("Failed to upload file to S3: " + e.getMessage(), 500);
-        }
+        
+        // Store file content directly in the database
+        material.setFileContent(file.getBytes());
 
         return materialRepository.save(material);
     }

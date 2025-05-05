@@ -16,7 +16,10 @@ public class User {
     private String password;
     private String firstName;
     private String lastName;
-    private String profilePictureUrl;
+    
+    @Lob
+    private byte[] profilePicture;
+    
     private String department;
     private String semester;
     private String enrollmentNumber;
@@ -28,8 +31,6 @@ public class User {
     private boolean enabled;
     private Date createdAt;
     private Date updatedAt;
-
-
 
     public enum Role {
         ADMIN, FACULTY, STUDENT

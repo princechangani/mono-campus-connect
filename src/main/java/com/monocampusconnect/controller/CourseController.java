@@ -36,22 +36,22 @@ public class CourseController {
         return new ResponseEntity<>(courseService.createCourse(course), HttpStatus.CREATED);
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Course> getCourse(@RequestPart("courseCode") String courseCode) {
+    @GetMapping("/{courseCode}")
+    public ResponseEntity<Course> getCourse(@PathVariable String courseCode) {
         return ResponseEntity.ok(courseService.getCourse(courseCode));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<Course>> getCoursesByDepartment(@RequestPart("department") String department) {
+    @GetMapping("/department/{department}")
+    public ResponseEntity<List<Course>> getCoursesByDepartment(@PathVariable String department) {
         return ResponseEntity.ok(courseService.getCoursesByDepartment(department));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<Course>> getCoursesBySemester(@RequestPart("semester") String semester) {
+    @GetMapping("/semester/{semester}")
+    public ResponseEntity<List<Course>> getCoursesBySemester(@PathVariable String semester) {
         return ResponseEntity.ok(courseService.getCoursesBySemester(semester));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(courseService.getAllCourses());
     }

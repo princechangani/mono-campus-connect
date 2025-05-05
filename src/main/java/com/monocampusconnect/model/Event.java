@@ -17,15 +17,13 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     private String title;
     private String description;
-    private String imageUrl;
+    
+    @Lob
+    private byte[] imageContent;
+    
     private String postedBy;
     private Date createdAt;
     private Date updatedAt;
-
-  
- 
 }

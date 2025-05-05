@@ -13,11 +13,23 @@ public class Exam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(nullable = false, unique = true)
     private String examCode;
+    
+    @Column(nullable = false)
     private String courseCode;
+    
+    @Column(nullable = false)
     private String title;
+    
+    @Column(nullable = false)
     private String description;
+    
+    @Column(nullable = false)
     private Date startDate;
+    
+    @Column(nullable = false)
     private Date endDate;
 
     @Enumerated(EnumType.STRING)

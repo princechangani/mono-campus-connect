@@ -17,30 +17,16 @@ public class Material {
     private String title;
     private String description;
     private String type; // PDF, DOC, PPT, VIDEO, LINK
-    private String url; // For links and uploaded files
+    
+    @Lob
+    private byte[] fileContent;
+    
     private String uploadedBy;
     private Date uploadedDate;
     private long fileSize;
-    public long getFileSize() {
-        return fileSize;
-    }
-
+    
     private int downloadCount;
-    public int getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(int downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
+    
     private Date lastUpdatedDate;
-    public Date getLastUpdatedDate() {
-        return lastUpdatedDate;
-    }
-
-    public void setLastUpdatedDate(Date lastUpdatedDate) {
-        this.lastUpdatedDate = lastUpdatedDate;
-    }
     private String fileType;
 }

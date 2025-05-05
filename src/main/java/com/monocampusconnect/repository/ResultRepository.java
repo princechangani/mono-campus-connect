@@ -15,5 +15,5 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     List<Result> findByExamCode(String examCode);
     List<Result> findByCourseCode(String courseCode);
     List<Result> findByStatus(String status);
-    List<Result> findByExamId(String examId);
+    List<Result> findByExamId(Long examId);
 }

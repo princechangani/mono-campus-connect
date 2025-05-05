@@ -23,7 +23,7 @@ public class ExamController {
     @Autowired
     private ExamService examService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<Exam> createExam(
             @RequestPart("examCode") String examCode,
@@ -116,7 +116,7 @@ public class ExamController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/enroll")
     @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<Void> enrollStudent(
             @RequestPart("examId") String examId,
@@ -125,7 +125,7 @@ public class ExamController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/unenroll")
     @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<Void> unenrollStudent(
             @RequestParam("examId") String examId,
@@ -134,7 +134,7 @@ public class ExamController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping
+    @GetMapping("/between-dates")
     @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<List<Exam>> getExamsBetweenDates(
             @RequestParam("startDate") Date startDate,
@@ -142,7 +142,7 @@ public class ExamController {
         return ResponseEntity.ok(examService.getExamsBetweenDates(startDate, endDate));
     }
 
-    @GetMapping
+    @GetMapping("/search")
     @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<List<Exam>> searchExams(
             @RequestParam(required = false) String courseCode,

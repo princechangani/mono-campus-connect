@@ -17,7 +17,15 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findByEnrolledStudentsContainsAndStartDateAfter(String studentId, Date date);
     List<Exam> findByEnrolledStudentsContainsAndEndDateBefore(String studentId, Date date);
     List<Exam> findByStartDateBetween(Date startDate, Date endDate);
-    List<Exam> findByEndDateBetween(Date startDate, Date endDate);
     List<Exam> findByStartDateBefore(Date date);
     List<Exam> findByEndDateAfter(Date date);
+    List<Exam> findByStartDateAfter(Date date);
+    List<Exam> findByEndDateBefore(Date date);
+    
+    // Optimized query methods
+    List<Exam> findByCourseCodeAndType(String courseCode, Exam.ExamType type);
+    List<Exam> findByCourseCodeAndStartDateAfter(String courseCode, Date startDate);
+    List<Exam> findByCourseCodeAndEndDateBefore(String courseCode, Date endDate);
+    List<Exam> findByTypeAndStartDateAfter(Exam.ExamType type, Date startDate);
+    List<Exam> findByTypeAndEndDateBefore(Exam.ExamType type, Date endDate);
 }

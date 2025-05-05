@@ -61,39 +61,39 @@ public class ResultController {
         return ResponseEntity.ok(resultService.updateResult(id, request));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping
     @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<Result> getResult(@RequestPart("id") Long id) {
+    public ResponseEntity<Result> getResult(@RequestParam("id") Long id) {
         return ResponseEntity.ok(resultService.getResultById(id));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/student")
     @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Result>> getResultsByStudent(@RequestPart("studentId") String studentId) {
+    public ResponseEntity<List<Result>> getResultsByStudent(@RequestParam("studentId") String studentId) {
         return ResponseEntity.ok(resultService.getResultsByStudent(studentId));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/exam")
     @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByExam(@RequestPart("examId") String examId) {
+    public ResponseEntity<List<Result>> getResultsByExam(@RequestParam("examId") String examId) {
         return ResponseEntity.ok(resultService.getResultsByExam(examId));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/statistics")
     @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<ExamStatistics> getExamStatistics(@RequestPart("examId") String examId) {
+    public ResponseEntity<ExamStatistics> getExamStatistics(@RequestParam("examId") Long examId) {
         return ResponseEntity.ok(resultService.getExamStatistics(examId));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/course")
     @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByCourse(@RequestPart("courseCode") String courseCode) {
+    public ResponseEntity<List<Result>> getResultsByCourse(@RequestParam("courseCode") String courseCode) {
         return ResponseEntity.ok(resultService.getResultsByCourse(courseCode));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/status")
     @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByStatus(@RequestPart("status") String status) {
+    public ResponseEntity<List<Result>> getResultsByStatus(@RequestParam("status") String status) {
         return ResponseEntity.ok(resultService.getResultsByStatus(status));
     }
 

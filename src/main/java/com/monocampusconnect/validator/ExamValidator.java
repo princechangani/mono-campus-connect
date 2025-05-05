@@ -1,7 +1,6 @@
 package com.monocampusconnect.validator;
 
 import com.monocampusconnect.dto.ExamRequest;
-import com.monocampusconnect.model.Exam;
 import com.monocampusconnect.exception.ApiException;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,6 @@ public class ExamValidator {
         // Date validation
         validateDates(request);
         
-        // Question validation
 
         // Student validation
         validateStudents(request);

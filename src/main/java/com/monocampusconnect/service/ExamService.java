@@ -158,32 +158,42 @@ public class ExamService {
     }
 
     public List<Exam> searchExams(String courseCode, Exam.ExamType type, Date startDate, Date endDate) {
-        List<Exam> exams = examRepository.findAll();
-        
-        if (courseCode != null) {
-            exams = exams.stream()
-                    .filter(e -> e.getCourseCode().equals(courseCode))
-                    .collect(Collectors.toList());
+        if (courseCode != null && type != null) {
+            List<Exam> exams = examRepository.findByCourseCodeAndType(courseCode, type);
+            if (startDate != null) {
+                exams = examRepository.findByCourseCodeAndStartDateAfter(courseCode, startDate);
+            }
+            if (endDate != null) {
+                exams = examRepository.findByCourseCodeAndEndDateBefore(courseCode, endDate);
+            }
+            return exams;
+        } else if (type != null) {
+            List<Exam> exams = examRepository.findByType(type);
+            if (startDate != null) {
+                exams = examRepository.findByTypeAndStartDateAfter(type, startDate);
+            }
+            if (endDate != null) {
+                exams = examRepository.findByTypeAndEndDateBefore(type, endDate);
+            }
+            return exams;
+        } else if (courseCode != null) {
+            List<Exam> exams = examRepository.findByCourseCode(courseCode);
+            if (startDate != null) {
+                exams = examRepository.findByCourseCodeAndStartDateAfter(courseCode, startDate);
+            }
+            if (endDate != null) {
+                exams = examRepository.findByCourseCodeAndEndDateBefore(courseCode, endDate);
+            }
+            return exams;
+        } else {
+            List<Exam> exams = examRepository.findAll();
+            if (startDate != null) {
+                exams = examRepository.findByStartDateAfter(startDate);
+            }
+            if (endDate != null) {
+                exams = examRepository.findByEndDateBefore(endDate);
+            }
+            return exams;
         }
-        
-        if (type != null) {
-            exams = exams.stream()
-                    .filter(e -> e.getType() == type)
-                    .collect(Collectors.toList());
-        }
-        
-        if (startDate != null) {
-            exams = exams.stream()
-                    .filter(e -> e.getStartDate().after(startDate))
-                    .collect(Collectors.toList());
-        }
-        
-        if (endDate != null) {
-            exams = exams.stream()
-                    .filter(e -> e.getEndDate().before(endDate))
-                    .collect(Collectors.toList());
-        }
-        
-        return exams;
     }
 }

@@ -9,16 +9,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import org.apache.commons.io.FilenameUtils;
 import com.monocampusconnect.repository.UserRepository;
-import com.monocampusconnect.service.AwsS3Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
@@ -29,9 +25,6 @@ public class ProfileService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private AwsS3Service awsS3Service; // Assuming you have AWS S3 service implemented
-
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
@@ -39,12 +32,9 @@ public class ProfileService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                true,
-                true,
-                true,
-                true,
-Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+                user.getRole().equals(User.Role.ADMIN)
+                        ? Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        : Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
     public User getProfile(Long userId) {
@@ -70,15 +60,8 @@ Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().na
 
         // Handle profile picture
         if (profilePicture != null && !profilePicture.isEmpty()) {
-            if (user.getProfilePictureUrl() != null) {
-                // Delete old profile picture from S3
-                awsS3Service.deleteFile(user.getProfilePictureUrl());
-            }
-            
-            // Upload new profile picture
-            String key = "profile-pictures/" + userId + "/" + UUID.randomUUID().toString() + ".jpg";
-            String s3Url = awsS3Service.uploadFile(profilePicture, key);
-            user.setProfilePictureUrl(s3Url);
+            // Store new profile picture directly in the database
+            user.setProfilePicture(profilePicture.getBytes());
         }
 
         return userRepository.save(user);
@@ -88,11 +71,9 @@ Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().na
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found", 404));
 
-        if (user.getProfilePictureUrl() != null) {
-            awsS3Service.deleteFile(user.getProfilePictureUrl());
-            user.setProfilePictureUrl(null);
-            userRepository.save(user);
-        }
+        // Set profile picture to null
+        user.setProfilePicture(null);
+        userRepository.save(user);
     }
 
     public User changePassword(Long userId, String currentPassword, String newPassword) {

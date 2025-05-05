@@ -128,7 +128,7 @@ public class ResultService {
         resultRepository.save(result);
     }
 
-    public ExamStatistics getExamStatistics(String examId) {
+    public ExamStatistics getExamStatistics(Long examId) {
         List<Result> results = resultRepository.findByExamId(examId);
         if (results.isEmpty()) {
             throw new ApiException("No results found for this exam", 404);

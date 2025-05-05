@@ -64,24 +64,21 @@ public class MaterialController {
     }
 */
 
-    @GetMapping(consumes = "multipart/form-data")
+    @GetMapping("/type/{type}")
     @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Material>> getMaterialsByType(
-            @RequestPart("type") String type) {
+    public ResponseEntity<List<Material>> getMaterialsByType(@PathVariable String type) {
         return ResponseEntity.ok(materialService.getMaterialsByType(type));
     }
 
-    @GetMapping(consumes = "multipart/form-data")
+    @GetMapping("/uploader/{uploader}")
     @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Material>> getMaterialsByUploader(
-            @RequestPart("uploader") String uploader) {
+    public ResponseEntity<List<Material>> getMaterialsByUploader(@PathVariable String uploader) {
         return ResponseEntity.ok(materialService.getMaterialsByUploader(uploader));
     }
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/recent/{limit}")
     @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Material>> getRecentMaterials(
-            @RequestPart("limit") int limit) {
+    public ResponseEntity<List<Material>> getRecentMaterials(@PathVariable int limit) {
         return ResponseEntity.ok(materialService.getRecentMaterials(limit));
     }
 
@@ -105,7 +102,7 @@ public class MaterialController {
         return ResponseEntity.ok(materialService.searchMaterials(title, description, courseCode, type, startDate, endDate));
     }
 */
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MaterialStats> getMaterialStats() {
         return ResponseEntity.ok(materialService.getMaterialStats());
