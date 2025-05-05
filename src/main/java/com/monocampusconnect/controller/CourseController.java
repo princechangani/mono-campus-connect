@@ -22,17 +22,7 @@ public class CourseController {
     }
 
     @PostMapping
-    public ResponseEntity<Course> createCourse(@RequestBody CourseRequest request) {
-        if (request.getCourseCode() == null || request.getCourseName() == null) {
-            throw new ApiException("Course code and name are required", 400);
-        }
-        
-        Course course = new Course();
-        course.setCourseCode(request.getCourseCode());
-        course.setCourseName(request.getCourseName());
-        course.setDepartment(request.getDepartment());
-        course.setCredits(request.getCredits());
-        
+    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
         return new ResponseEntity<>(courseService.createCourse(course), HttpStatus.CREATED);
     }
 

@@ -22,20 +22,13 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
-            @RequestParam("email") String email,
-            @RequestParam("password") String password) {
-        
-        if (email == null || email.trim().isEmpty()) {
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ApiException("Email is required", 400);
         }
-        if (password == null || password.trim().isEmpty()) {
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new ApiException("Password is required", 400);
         }
-        
-        AuthRequest request = new AuthRequest();
-        request.setEmail(email);
-        request.setPassword(password);
         
         User user = authService.login(request);
         String token = authService.generateToken(user);
@@ -43,35 +36,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @RequestParam("email") String email,
-            @RequestParam("password") String password,
-            @RequestParam("firstName") String firstName,
-            @RequestParam("lastName") String lastName,
-            @RequestParam("role") String role) {
-        
-        if (email == null || email.trim().isEmpty()) {
+    public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ApiException("Email is required", 400);
         }
-        if (password == null || password.trim().isEmpty()) {
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new ApiException("Password is required", 400);
         }
-        if (firstName == null || firstName.trim().isEmpty()) {
+        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) {
             throw new ApiException("First name is required", 400);
         }
-        if (lastName == null || lastName.trim().isEmpty()) {
+        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) {
             throw new ApiException("Last name is required", 400);
         }
-        if (role == null || role.trim().isEmpty()) {
+        if (request.getRole() == null || request.getRole().trim().isEmpty()) {
             throw new ApiException("Role is required", 400);
         }
-        
-        AuthRequest request = new AuthRequest();
-        request.setEmail(email);
-        request.setPassword(password);
-        request.setFirstName(firstName);
-        request.setLastName(lastName);
-        request.setRole(role);
         
         User user = authService.register(request);
         return ResponseEntity.ok(new AuthResponse(user.getEmail(), user.getRole().name(), "Registration successful"));

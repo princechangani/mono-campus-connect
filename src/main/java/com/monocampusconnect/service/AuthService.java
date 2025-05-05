@@ -37,11 +37,15 @@ public class AuthService {
     }
 
     public User login(AuthRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Request body is required");
+        }
+        
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
         
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("Invalid credentials for user: " + request.getEmail());
         }
         
         return user;

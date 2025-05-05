@@ -37,6 +37,11 @@ public class SecurityConfig {
                     // Public endpoints
                     auth.requestMatchers(PUBLIC_ENDPOINTS.toArray(String[]::new)).permitAll();
 
+                    // Course endpoints - accessible to all authenticated users
+                    auth.requestMatchers(
+                            "/api/courses/**"
+                    ).authenticated();
+
                     // Admin-only endpoints
                     auth.requestMatchers(
                             "/api/admin/**",
@@ -76,10 +81,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://campus-connect.com"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "http://localhost:5175"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
