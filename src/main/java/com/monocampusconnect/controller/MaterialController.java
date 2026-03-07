@@ -6,38 +6,32 @@ import com.monocampusconnect.model.Material;
 import com.monocampusconnect.service.MaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/materials")
 public class MaterialController {
 
-    private final MaterialService materialService;
-
     @Autowired
+    private MaterialService materialService;
 
-    public MaterialController(MaterialService materialService) {
-        this.materialService = materialService;
-    }
-
+    /** POST /api/materials — multipart upload */
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<Material> createMaterial(
             @RequestPart("materialCode") String materialCode,
             @RequestPart("courseCode") String courseCode,
             @RequestPart("title") String title,
-            @RequestPart("description") String description,
+            @RequestPart(value = "description", required = false) String description,
             @RequestPart("type") String type,
             @RequestPart("uploadedBy") String uploadedBy,
             @RequestPart("file") MultipartFile file) throws IOException {
+
         MaterialRequest request = new MaterialRequest();
         request.setMaterialCode(materialCode);
         request.setCourseCode(courseCode);
@@ -45,111 +39,75 @@ public class MaterialController {
         request.setDescription(description);
         request.setType(type);
         request.setUploadedBy(uploadedBy);
-
-        return new ResponseEntity<>(materialService.createMaterial(request, file), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(materialService.createMaterial(request, file));
     }
 
+    /** GET /api/materials — all materials for tenant */
+    @GetMapping
+    public ResponseEntity<List<Material>> getAllMaterials() {
+        return ResponseEntity.ok(materialService.getAllMaterials());
+    }
+
+    /** GET /api/materials/{id} — download/view + increments count */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
     public ResponseEntity<Material> getMaterial(@PathVariable Long id) {
         return ResponseEntity.ok(materialService.getMaterial(id));
     }
 
-/*
-    @GetMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Material>> getMaterialsByCourse(
-            @RequestPart("courseCode") String courseCode) {
+    /** GET /api/materials/course/{courseCode} */
+    @GetMapping("/course/{courseCode}")
+    public ResponseEntity<List<Material>> getMaterialsByCourse(@PathVariable String courseCode) {
         return ResponseEntity.ok(materialService.getMaterialsByCourse(courseCode));
     }
-*/
 
+    /** GET /api/materials/type/{type} — ADMIN only */
     @GetMapping("/type/{type}")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
     public ResponseEntity<List<Material>> getMaterialsByType(@PathVariable String type) {
         return ResponseEntity.ok(materialService.getMaterialsByType(type));
     }
 
+    /** GET /api/materials/uploader/{uploader} */
     @GetMapping("/uploader/{uploader}")
-    @PreAuthorize("hasRole('FACULTY')")
     public ResponseEntity<List<Material>> getMaterialsByUploader(@PathVariable String uploader) {
         return ResponseEntity.ok(materialService.getMaterialsByUploader(uploader));
     }
 
+    /** GET /api/materials/recent/{limit} */
     @GetMapping("/recent/{limit}")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
     public ResponseEntity<List<Material>> getRecentMaterials(@PathVariable int limit) {
         return ResponseEntity.ok(materialService.getRecentMaterials(limit));
     }
 
-/*    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Material>> getMaterialsByDateRange(
-            @RequestPart("startDate") Date startDate,
-            @RequestPart("endDate") Date endDate) {
-        return ResponseEntity.ok(materialService.getMaterialsByDateRange(startDate, endDate));
-    }*/
-
- /*   @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Material>> searchMaterials(
-            @RequestPart(value = "title", required = false) String title,
-            @RequestPart(value = "description", required = false) String description,
-            @RequestPart(value = "courseCode", required = false) String courseCode,
-            @RequestPart(value = "type", required = false) String type,
-            @RequestPart(value = "startDate", required = false) Date startDate,
-            @RequestPart(value = "endDate", required = false) Date endDate) {
-        return ResponseEntity.ok(materialService.searchMaterials(title, description, courseCode, type, startDate, endDate));
-    }
-*/
+    /** GET /api/materials/stats */
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MaterialStats> getMaterialStats() {
         return ResponseEntity.ok(materialService.getMaterialStats());
     }
 
-/*
-    @PutMapping("/{materialCode}")
-    @PreAuthorize("hasRole('FACULTY')")
+    /** PUT /api/materials/{id} — update with optional new file */
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<Material> updateMaterial(
-            @PathVariable String materialCode,
-            @RequestPart(value = "materialCode", required = false) String newMaterialCode,
-            @RequestPart(value = "courseCode", required = false) String courseCode,
-            @RequestPart(value = "title", required = false) String title,
+            @PathVariable Long id,
+            @RequestPart("courseCode") String courseCode,
+            @RequestPart("title") String title,
             @RequestPart(value = "description", required = false) String description,
-            @RequestPart(value = "type", required = false) String type,
+            @RequestPart("type") String type,
             @RequestPart(value = "uploadedBy", required = false) String uploadedBy,
-            @RequestPart(required = false) MultipartFile file) throws IOException {
-        
+            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
+
         MaterialRequest request = new MaterialRequest();
-        request.setMaterialCode(materialCode);
         request.setCourseCode(courseCode);
         request.setTitle(title);
         request.setDescription(description);
         request.setType(type);
         request.setUploadedBy(uploadedBy);
-
-        return ResponseEntity.ok(materialService.updateMaterial(materialCode, request, file));
-    }
-*/
-
-/*    @DeleteMapping("/{materialCode}")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<Void> deleteMaterial(@PathVariable String materialCode) {
-        materialService.deleteMaterial(materialCode);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok(materialService.updateMaterial(id, request, file));
     }
 
-    @GetMapping("/download/{materialCode}")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<Void> downloadMaterial(@PathVariable String materialCode) {
-        materialService.incrementDownloadCount(materialCode);
-        return new ResponseEntity<>(HttpStatus.OK);
+    /** DELETE /api/materials/{id} */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteMaterial(@PathVariable Long id) {
+        materialService.deleteMaterial(id);
+        return ResponseEntity.ok(Map.of("message", "Material deleted successfully"));
     }
-
-    @GetMapping("/downloads/{materialCode}")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<Integer> getMaterialDownloads(@PathVariable String materialCode) {
-        return ResponseEntity.ok(materialService.getDownloadCount(materialCode));
-    }*/
 }

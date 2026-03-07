@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "exams")
@@ -13,7 +14,10 @@ public class Exam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     @Column(nullable = false, unique = true)
     private String examCode;
     

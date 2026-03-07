@@ -106,6 +106,12 @@
             <version>2.14.0</version>
         </dependency>
 
+        <!-- Spring Mail (for OTP email delivery) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

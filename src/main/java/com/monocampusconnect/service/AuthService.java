@@ -6,10 +6,9 @@ import com.monocampusconnect.model.User;
 import com.monocampusconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
+
+import java.util.Date;
 
 @Service
 public class AuthService {
@@ -26,6 +25,9 @@ public class AuthService {
     }
 
     public User register(AuthRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already in use: " + request.getEmail());
+        }
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -33,6 +35,8 @@ public class AuthService {
         user.setLastName(request.getLastName());
         user.setRole(User.Role.valueOf(request.getRole().toUpperCase()));
         user.setEnabled(true);
+        user.setCreatedAt(new Date());
+        user.setUpdatedAt(new Date());
         return userRepository.save(user);
     }
 
@@ -40,39 +44,20 @@ public class AuthService {
         if (request == null) {
             throw new RuntimeException("Request body is required");
         }
-        
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
-        
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials for user: " + request.getEmail());
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Account is disabled. Please contact admin.");
         }
-        
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
         return user;
     }
 
-    public User login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            return user;
-        }
-        throw new RuntimeException("Invalid credentials");
-    }
-
+    /** Generates a JWT with tenantId, userId, and role embedded */
     public String generateToken(User user) {
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                Collections.singletonList(
-                    new org.springframework.security.core.authority.SimpleGrantedAuthority(user.getRole().name())
-                )
-            );
-        return jwtConfig.generateToken(userDetails);
-    }
-
-    public boolean validateToken(String token) {
-        return jwtConfig.validateToken(token, null);
+        return jwtConfig.generateToken(user);
     }
 }

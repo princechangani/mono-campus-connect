@@ -1,5 +1,6 @@
 package com.monocampusconnect.service;
 
+import com.monocampusconnect.config.TenantContextHolder;
 import com.monocampusconnect.dto.ExamRequest;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.Exam;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 public class ExamService {
@@ -20,6 +21,12 @@ public class ExamService {
 
     @Autowired
     private ExamValidator examValidator;
+
+    private UUID currentTenant() {
+        UUID tenantId = TenantContextHolder.getTenantId();
+        if (tenantId == null) throw new ApiException("Tenant context missing", 400);
+        return tenantId;
+    }
 
     public Exam createExam(ExamRequest request) {
         // Validate exam
@@ -31,6 +38,7 @@ public class ExamService {
         }
 
         Exam exam = new Exam();
+        exam.setTenantId(currentTenant());
         exam.setExamCode(request.getExamCode());
         exam.setCourseCode(request.getCourseCode());
         exam.setTitle(request.getTitle());
@@ -50,6 +58,10 @@ public class ExamService {
 
     public List<Exam> getExamsByCourse(String courseCode) {
         return examRepository.findByCourseCode(courseCode);
+    }
+
+    public List<Exam> getAllExams() {
+        return examRepository.findByTenantId(currentTenant());
     }
 
     public List<Exam> getExamsByType(Exam.ExamType type) {
@@ -101,14 +113,14 @@ public class ExamService {
 
         // Check if exam has any results
         if (exam.getResults() != null && !exam.getResults().isEmpty()) {
-            throw new ApiException("Cannot delete exam with results", 400);
+            throw new ApiException("Cannot delete exam with existing results", 400);
         }
 
         examRepository.delete(exam);
     }
 
-    public void enrollStudent(String examId, String studentId) {
-        Exam exam = examRepository.findByExamCode(examId)
+    public void enrollStudent(String examCode, String studentId) {
+        Exam exam = examRepository.findByExamCode(examCode)
                 .orElseThrow(() -> new ApiException("Exam not found", 404));
 
         // Check if exam is in future
@@ -116,16 +128,16 @@ public class ExamService {
             throw new ApiException("Cannot enroll in past exams", 400);
         }
 
-        if (!exam.getEnrolledStudents().contains(studentId)) {
-            exam.getEnrolledStudents().add(studentId);
-            examRepository.save(exam);
-        } else {
+        if (exam.getEnrolledStudents().contains(studentId)) {
             throw new ApiException("Student already enrolled", 400);
         }
+
+        exam.getEnrolledStudents().add(studentId);
+        examRepository.save(exam);
     }
 
-    public void unenrollStudent(String examId, String studentId) {
-        Exam exam = examRepository.findByExamCode(examId)
+    public void unenrollStudent(String examCode, String studentId) {
+        Exam exam = examRepository.findByExamCode(examCode)
                 .orElseThrow(() -> new ApiException("Exam not found", 404));
 
         // Check if exam has started
@@ -133,23 +145,17 @@ public class ExamService {
             throw new ApiException("Cannot unenroll from ongoing/past exams", 400);
         }
 
-        if (exam.getEnrolledStudents().contains(studentId)) {
-            exam.getEnrolledStudents().remove(studentId);
-            examRepository.save(exam);
-        } else {
+        if (!exam.getEnrolledStudents().contains(studentId)) {
             throw new ApiException("Student not enrolled", 400);
         }
+
+        exam.getEnrolledStudents().remove(studentId);
+        examRepository.save(exam);
     }
 
-    public double calculateTotalMarks(Exam exam) {
-
-        return 100.00;
-    }
-
-    public int getEnrolledStudentsCount(String examId) {
-        Exam exam = examRepository.findByExamCode(examId)
+    public int getEnrolledStudentsCount(String examCode) {
+        Exam exam = examRepository.findByExamCode(examCode)
                 .orElseThrow(() -> new ApiException("Exam not found", 404));
-        
         return exam.getEnrolledStudents() != null ? exam.getEnrolledStudents().size() : 0;
     }
 
@@ -159,41 +165,19 @@ public class ExamService {
 
     public List<Exam> searchExams(String courseCode, Exam.ExamType type, Date startDate, Date endDate) {
         if (courseCode != null && type != null) {
-            List<Exam> exams = examRepository.findByCourseCodeAndType(courseCode, type);
-            if (startDate != null) {
-                exams = examRepository.findByCourseCodeAndStartDateAfter(courseCode, startDate);
-            }
-            if (endDate != null) {
-                exams = examRepository.findByCourseCodeAndEndDateBefore(courseCode, endDate);
-            }
-            return exams;
+            return examRepository.findByCourseCodeAndType(courseCode, type);
         } else if (type != null) {
-            List<Exam> exams = examRepository.findByType(type);
-            if (startDate != null) {
-                exams = examRepository.findByTypeAndStartDateAfter(type, startDate);
-            }
-            if (endDate != null) {
-                exams = examRepository.findByTypeAndEndDateBefore(type, endDate);
-            }
-            return exams;
+            if (startDate != null) return examRepository.findByTypeAndStartDateAfter(type, startDate);
+            if (endDate != null) return examRepository.findByTypeAndEndDateBefore(type, endDate);
+            return examRepository.findByType(type);
         } else if (courseCode != null) {
-            List<Exam> exams = examRepository.findByCourseCode(courseCode);
-            if (startDate != null) {
-                exams = examRepository.findByCourseCodeAndStartDateAfter(courseCode, startDate);
-            }
-            if (endDate != null) {
-                exams = examRepository.findByCourseCodeAndEndDateBefore(courseCode, endDate);
-            }
-            return exams;
+            if (startDate != null) return examRepository.findByCourseCodeAndStartDateAfter(courseCode, startDate);
+            if (endDate != null) return examRepository.findByCourseCodeAndEndDateBefore(courseCode, endDate);
+            return examRepository.findByCourseCode(courseCode);
         } else {
-            List<Exam> exams = examRepository.findAll();
-            if (startDate != null) {
-                exams = examRepository.findByStartDateAfter(startDate);
-            }
-            if (endDate != null) {
-                exams = examRepository.findByEndDateBefore(endDate);
-            }
-            return exams;
+            if (startDate != null) return examRepository.findByStartDateAfter(startDate);
+            if (endDate != null) return examRepository.findByEndDateBefore(endDate);
+            return getAllExams();
         }
     }
 }

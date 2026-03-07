@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = "materials")
@@ -12,6 +13,10 @@ public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     private String materialCode;
     private String courseCode;
     private String title;

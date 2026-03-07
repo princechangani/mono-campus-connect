@@ -1,10 +1,9 @@
 package com.monocampusconnect.service;
 
+import com.monocampusconnect.config.TenantContextHolder;
 import com.monocampusconnect.dto.MaterialRequest;
 import com.monocampusconnect.dto.MaterialStats;
 import com.monocampusconnect.exception.ApiException;
-import java.time.Instant;
-import java.io.IOException;
 import com.monocampusconnect.model.Material;
 import com.monocampusconnect.repository.MaterialRepository;
 import com.monocampusconnect.validator.MaterialValidator;
@@ -16,23 +15,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.time.ZoneId;
+import java.util.UUID;
 
 @Service
 public class MaterialService {
 
     private final MaterialRepository materialRepository;
-
     private final MaterialValidator materialValidator;
 
-    private static final int RATE_LIMIT_WINDOW = 60; // seconds
-    private static final int RATE_LIMIT_COUNT = 5; // requests
     private static final int MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-
+    private static final int RATE_LIMIT_WINDOW = 60;
+    private static final int RATE_LIMIT_COUNT = 5;
     private final ThreadLocal<Instant> lastRequestTime = new ThreadLocal<>();
     private final ThreadLocal<Integer> requestCount = new ThreadLocal<>();
 
@@ -41,39 +37,34 @@ public class MaterialService {
         this.materialValidator = materialValidator;
     }
 
+    private UUID currentTenant() {
+        UUID tenantId = TenantContextHolder.getTenantId();
+        if (tenantId == null) throw new ApiException("Tenant context missing", 400);
+        return tenantId;
+    }
+
     private void applyRateLimit() {
-        Instant currentTime = Instant.now();
-        Instant lastRequest = lastRequestTime.get();
-        
-        if (lastRequest == null || currentTime.isAfter(lastRequest.plusSeconds(RATE_LIMIT_WINDOW))) {
-            // Reset counter if we're in a new window
+        Instant now = Instant.now();
+        Instant last = lastRequestTime.get();
+        if (last == null || now.isAfter(last.plusSeconds(RATE_LIMIT_WINDOW))) {
             requestCount.set(1);
         } else {
             int count = requestCount.get() != null ? requestCount.get() : 0;
-            if (count >= RATE_LIMIT_COUNT) {
-                throw new ApiException("Rate limit exceeded. Please wait and try again.", 429);
-            }
+            if (count >= RATE_LIMIT_COUNT) throw new ApiException("Rate limit exceeded. Try again later.", 429);
             requestCount.set(count + 1);
         }
-        lastRequestTime.set(currentTime);
+        lastRequestTime.set(now);
     }
 
     public Material createMaterial(MaterialRequest request, MultipartFile file) throws IOException {
-        // Rate limiting
         applyRateLimit();
-
-        // Validate material
         materialValidator.validateMaterial(request);
-
-        // Validate file
         validateFile(file);
-
-        // Check if material code exists
         if (materialRepository.findByMaterialCode(request.getMaterialCode()) != null) {
             throw new ApiException("Material code already exists", 400);
         }
-
         Material material = new Material();
+        material.setTenantId(currentTenant());
         material.setMaterialCode(request.getMaterialCode());
         material.setCourseCode(request.getCourseCode());
         material.setTitle(request.getTitle());
@@ -83,47 +74,79 @@ public class MaterialService {
         material.setFileSize(file.getSize());
         material.setUploadedBy(request.getUploadedBy());
         material.setUploadedDate(new Date());
-        
-        // Store file content directly in the database
         material.setFileContent(file.getBytes());
-
         return materialRepository.save(material);
     }
 
-    private void validateFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            throw new ApiException("File is required", 400);
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ApiException("File size cannot exceed 50MB", 400);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.matches("application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|application/vnd\\.ms-powerpoint|application/vnd\\.openxmlformats-officedocument\\.presentationml\\.presentation|application/zip|image/jpeg|image/png")) {
-            throw new ApiException("Invalid file type. Allowed types: PDF, DOC, DOCX, PPT, PPTX, ZIP, JPG, PNG", 400);
+    private void validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) throw new ApiException("File is required", 400);
+        if (file.getSize() > MAX_FILE_SIZE) throw new ApiException("File size cannot exceed 50MB", 400);
+        String ct = file.getContentType();
+        if (ct == null || !ct.matches(
+                "application/pdf|application/msword|" +
+                "application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|" +
+                "application/vnd\\.ms-powerpoint|" +
+                "application/vnd\\.openxmlformats-officedocument\\.presentationml\\.presentation|" +
+                "application/zip|image/jpeg|image/png|video/mp4|video/mpeg")) {
+            throw new ApiException("Invalid file type. Allowed: PDF, DOC, DOCX, PPT, PPTX, ZIP, JPG, PNG, MP4", 400);
         }
     }
 
     public Material getMaterial(Long id) {
-        return materialRepository.findById(id)
+        Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Material not found", 404));
+        if (!currentTenant().equals(material.getTenantId()))
+            throw new ApiException("Material not found in this college", 404);
+        // Increment download count
+        material.setDownloadCount(material.getDownloadCount() + 1);
+        return materialRepository.save(material);
     }
 
+    public List<Material> getAllMaterials() {
+        return materialRepository.findByTenantId(currentTenant());
+    }
 
+    public List<Material> getMaterialsByCourse(String courseCode) {
+        return materialRepository.findByTenantIdAndCourseCode(currentTenant(), courseCode);
+    }
+
+    public Material updateMaterial(Long id, MaterialRequest request, MultipartFile file) throws IOException {
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Material not found", 404));
+        if (!currentTenant().equals(material.getTenantId()))
+            throw new ApiException("Material not found in this college", 404);
+        material.setTitle(request.getTitle());
+        material.setDescription(request.getDescription());
+        material.setType(request.getType());
+        material.setLastUpdatedDate(new Date());
+        if (file != null && !file.isEmpty()) {
+            validateFile(file);
+            material.setFileContent(file.getBytes());
+            material.setFileType(file.getContentType());
+            material.setFileSize(file.getSize());
+        }
+        return materialRepository.save(material);
+    }
+
+    public void deleteMaterial(Long id) {
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Material not found", 404));
+        if (!currentTenant().equals(material.getTenantId()))
+            throw new ApiException("Material not found in this college", 404);
+        materialRepository.deleteById(id);
+    }
 
     public MaterialStats getMaterialStats() {
-        List<Material> materials = materialRepository.findAll();
-        
+        List<Material> materials = materialRepository.findByTenantId(currentTenant());
         MaterialStats stats = new MaterialStats();
         if (!materials.isEmpty()) {
-            Material firstMaterial = materials.get(0);
-            stats.setMaterialId(firstMaterial.getId());
-            stats.setTitle(firstMaterial.getTitle());
-            stats.setCourseName(firstMaterial.getCourseCode());
-            stats.setFileName(firstMaterial.getFileType());
-            stats.setUploadDate(firstMaterial.getUploadedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-            stats.setDownloadCount(0L); // Assuming no download tracking yet
+            Material first = materials.get(0);
+            stats.setMaterialId(first.getId());
+            stats.setTitle(first.getTitle());
+            stats.setCourseName(first.getCourseCode());
+            stats.setFileName(first.getFileType());
+            stats.setUploadDate(first.getUploadedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            stats.setDownloadCount(0L);
         }
         return stats;
     }
@@ -140,6 +163,4 @@ public class MaterialService {
         Pageable pageable = PageRequest.of(0, limit);
         return materialRepository.findTopByOrderByUploadedDateDesc(pageable);
     }
-
-
 }

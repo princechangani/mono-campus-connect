@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +13,10 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     private String email;
     private String password;
     private String firstName;
@@ -33,6 +38,6 @@ public class User {
     private Date updatedAt;
 
     public enum Role {
-        ADMIN, FACULTY, STUDENT
+        SUPER_ADMIN, ADMIN, FACULTY, STUDENT
     }
 }

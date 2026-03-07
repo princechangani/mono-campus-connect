@@ -1,5 +1,6 @@
 package com.monocampusconnect.service;
 
+import com.monocampusconnect.config.TenantContextHolder;
 import com.monocampusconnect.dto.ExamStatistics;
 import com.monocampusconnect.dto.ResultRequest;
 import com.monocampusconnect.exception.ApiException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ResultService {
@@ -22,23 +24,27 @@ public class ResultService {
     @Autowired
     private ExamRepository examRepository;
 
+    private UUID currentTenant() {
+        UUID tenantId = TenantContextHolder.getTenantId();
+        if (tenantId == null) throw new ApiException("Tenant context missing", 400);
+        return tenantId;
+    }
+
     public Result createResult(ResultRequest request) {
         if (request.getStudentId() == null || request.getExamId() == null) {
             throw new ApiException("Student ID and Exam ID are required", 400);
         }
-
-        // Validate exam exists
         Exam exam = examRepository.findById(request.getExamId())
                 .orElseThrow(() -> new ApiException("Exam not found", 404));
-
-        // Validate if student is enrolled
         if (!exam.getEnrolledStudents().contains(request.getStudentId())) {
             throw new ApiException("Student not enrolled in this exam", 400);
         }
-
         Result result = new Result();
+        result.setTenantId(currentTenant());
         result.setStudentId(request.getStudentId());
+        result.setExamCode(exam.getExamCode());
         result.setCourseCode(request.getCourseCode());
+        result.setExam(exam);
         result.setResultDetails(request.getResultDetails());
         result.setTotalMarks(request.getTotalMarks());
         result.setObtainedMarks(request.getObtainedMarks());
@@ -48,7 +54,6 @@ public class ResultService {
         result.setComments(request.getComments());
         result.setCreatedAt(new Date());
         result.setUpdatedAt(new Date());
-
         return resultRepository.save(result);
     }
 
@@ -63,7 +68,7 @@ public class ResultService {
     }
 
     public List<Result> getResultsByStudent(String studentId) {
-        return resultRepository.findByStudentId(studentId);
+        return resultRepository.findByTenantIdAndStudentId(currentTenant(), studentId);
     }
 
     public List<Result> getResultsByExam(String examCode) {
@@ -78,87 +83,61 @@ public class ResultService {
         return resultRepository.findByStatus(status);
     }
 
+    public List<Result> getAllResults() {
+        return resultRepository.findByTenantId(currentTenant());
+    }
+
     private String calculateGrade(double obtainedMarks, double totalMarks) {
-        double percentage = (obtainedMarks / totalMarks) * 100;
-        if (percentage >= 90) return "A";
-        else if (percentage >= 80) return "B";
-        else if (percentage >= 70) return "C";
-        else if (percentage >= 60) return "D";
+        double pct = (obtainedMarks / totalMarks) * 100;
+        if (pct >= 90) return "A+";
+        else if (pct >= 80) return "A";
+        else if (pct >= 70) return "B";
+        else if (pct >= 60) return "C";
+        else if (pct >= 50) return "D";
         else return "F";
     }
 
     private String calculateStatus(double obtainedMarks, double totalMarks) {
-        double percentage = (obtainedMarks / totalMarks) * 100;
-        return percentage >= 40 ? "PASSED" : "FAILED";
+        return ((obtainedMarks / totalMarks) * 100) >= 40 ? "PASSED" : "FAILED";
     }
 
     public Result updateResult(Long id, ResultRequest request) {
         Result result = resultRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Result not found", 404));
-
-        if (request.getStudentId() != null) {
-            result.setStudentId(request.getStudentId());
-        }
-        if (request.getExamId() != null) {
-        }
-        if (request.getCourseCode() != null) {
-            result.setCourseCode(request.getCourseCode());
-        }
-        if (request.getResultDetails() != null) {
-            result.setResultDetails(request.getResultDetails());
-        }
-        // For primitive double types, we don't need null checks
+        if (!currentTenant().equals(result.getTenantId()))
+            throw new ApiException("Result not found in this college", 404);
+        if (request.getStudentId() != null) result.setStudentId(request.getStudentId());
+        if (request.getCourseCode() != null) result.setCourseCode(request.getCourseCode());
+        if (request.getResultDetails() != null) result.setResultDetails(request.getResultDetails());
         result.setTotalMarks(request.getTotalMarks());
         result.setObtainedMarks(request.getObtainedMarks());
         result.setGrade(calculateGrade(request.getObtainedMarks(), request.getTotalMarks()));
         result.setStatus(calculateStatus(request.getObtainedMarks(), request.getTotalMarks()));
-        if (request.getComments() != null) {
-            result.setComments(request.getComments());
-        }
+        if (request.getComments() != null) result.setComments(request.getComments());
         result.setUpdatedAt(new Date());
-
         return resultRepository.save(result);
     }
 
     public void updateResultStatus(Long id, String status) {
         Result result = resultRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Result not found", 404));
-
         result.setStatus(status);
         resultRepository.save(result);
     }
 
     public ExamStatistics getExamStatistics(Long examId) {
         List<Result> results = resultRepository.findByExamId(examId);
-        if (results.isEmpty()) {
-            throw new ApiException("No results found for this exam", 404);
+        if (results.isEmpty()) throw new ApiException("No results found for this exam", 404);
+        double total = 0, highest = Double.MIN_VALUE, lowest = Double.MAX_VALUE;
+        int passed = 0;
+        for (Result r : results) {
+            double m = r.getObtainedMarks();
+            total += m;
+            highest = Math.max(highest, m);
+            lowest = Math.min(lowest, m);
+            if ("PASSED".equals(r.getStatus())) passed++;
         }
-
-        double totalMarks = 0;
-        double highestMarks = Double.MIN_VALUE;
-        double lowestMarks = Double.MAX_VALUE;
-        int passedCount = 0;
-        int totalCount = results.size();
-
-        for (Result result : results) {
-            double marks = result.getObtainedMarks();
-            totalMarks += marks;
-            highestMarks = Math.max(highestMarks, marks);
-            lowestMarks = Math.min(lowestMarks, marks);
-            if (result.getStatus().equals("PASSED")) {
-                passedCount++;
-            }
-        }
-
-        double averageMarks = totalMarks / totalCount;
-        double passRate = ((double) passedCount / totalCount) * 100;
-
-        return new ExamStatistics(
-            averageMarks,
-            highestMarks,
-            lowestMarks,
-            passRate,
-            results.size()
-        );
+        return new ExamStatistics(total / results.size(), highest, lowest,
+                ((double) passed / results.size()) * 100, results.size());
     }
 }

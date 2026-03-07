@@ -3,16 +3,13 @@ package com.monocampusconnect.service;
 import com.monocampusconnect.dto.ProfileRequest;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.User;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.UUID;
-import org.apache.commons.io.FilenameUtils;
 import com.monocampusconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +22,9 @@ public class ProfileService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
@@ -32,9 +32,7 @@ public class ProfileService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                user.getRole().equals(User.Role.ADMIN)
-                        ? Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                        : Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
 
     public User getProfile(Long userId) {
@@ -46,32 +44,26 @@ public class ProfileService implements UserDetailsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found", 404));
 
-        // Update basic information
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDepartment(request.getDepartment());
-        user.setSemester(request.getSemester());
-        user.setEnrollmentNumber(request.getEnrollmentNumber());
-        user.setFacultyId(request.getFacultyId());
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setAddress(request.getAddress());
-        user.setDateOfBirth(request.getDateOfBirth());
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getDepartment() != null) user.setDepartment(request.getDepartment());
+        if (request.getSemester() != null) user.setSemester(request.getSemester());
+        if (request.getEnrollmentNumber() != null) user.setEnrollmentNumber(request.getEnrollmentNumber());
+        if (request.getFacultyId() != null) user.setFacultyId(request.getFacultyId());
+        if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
+        if (request.getAddress() != null) user.setAddress(request.getAddress());
+        if (request.getDateOfBirth() != null) user.setDateOfBirth(request.getDateOfBirth());
         user.setUpdatedAt(new Date());
 
-        // Handle profile picture
         if (profilePicture != null && !profilePicture.isEmpty()) {
-            // Store new profile picture directly in the database
             user.setProfilePicture(profilePicture.getBytes());
         }
-
         return userRepository.save(user);
     }
 
     public void deleteProfilePicture(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found", 404));
-
-        // Set profile picture to null
         user.setProfilePicture(null);
         userRepository.save(user);
     }
@@ -79,8 +71,14 @@ public class ProfileService implements UserDetailsService {
     public User changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found", 404));
-
-        // TODO: Add password validation and update logic
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new ApiException("Current password is incorrect", 400);
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new ApiException("New password must be at least 8 characters", 400);
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(new Date());
         return userRepository.save(user);
     }
 }

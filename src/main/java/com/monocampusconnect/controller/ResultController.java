@@ -2,18 +2,16 @@ package com.monocampusconnect.controller;
 
 import com.monocampusconnect.dto.ExamStatistics;
 import com.monocampusconnect.dto.ResultRequest;
-import com.monocampusconnect.dto.ResultStats;
-import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.Result;
 import com.monocampusconnect.service.ResultService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/results")
@@ -22,85 +20,66 @@ public class ResultController {
     @Autowired
     private ResultService resultService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<Result> createResult(
-            @RequestPart("studentId") String studentId,
-            @RequestPart("examId") Long examId,
-            @RequestPart("marks") Double marks,
-            @RequestPart("grade") String grade,
-            @RequestPart(value = "comments", required = false) String comments) {
-        
-        ResultRequest request = new ResultRequest();
-        request.setStudentId(studentId);
-        request.setExamId(examId);
-        request.setObtainedMarks(marks);
-        request.setGrade(grade);
-        request.setComments(comments);
-        
-        return new ResponseEntity<>(resultService.createResult(request), HttpStatus.CREATED);
+    /** POST /api/results */
+    @PostMapping
+    public ResponseEntity<Result> createResult(@Valid @RequestBody ResultRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultService.createResult(request));
     }
 
-    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<Result> updateResult(
-            @RequestPart("id") Long id,
-            @RequestPart(value = "studentId", required = false) String studentId,
-            @RequestPart(value = "examId", required = false) Long examId,
-            @RequestPart(value = "marks", required = false) Double marks,
-            @RequestPart(value = "grade", required = false) String grade,
-            @RequestPart(value = "comments", required = false) String comments) {
-        
-        ResultRequest request = new ResultRequest();
-        request.setStudentId(studentId);
-        request.setExamId(examId);
-        request.setObtainedMarks(marks);
-        request.setGrade(grade);
-        request.setComments(comments);
-        
-        return ResponseEntity.ok(resultService.updateResult(id, request));
-    }
-
+    /** GET /api/results */
     @GetMapping
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<Result> getResult(@RequestParam("id") Long id) {
+    public ResponseEntity<List<Result>> getAllResults() {
+        return ResponseEntity.ok(resultService.getAllResults());
+    }
+
+    /** GET /api/results/{id} */
+    @GetMapping("/{id}")
+    public ResponseEntity<Result> getResult(@PathVariable Long id) {
         return ResponseEntity.ok(resultService.getResultById(id));
     }
 
-    @GetMapping("/student")
-    @PreAuthorize("hasAnyRole('FACULTY', 'STUDENT')")
-    public ResponseEntity<List<Result>> getResultsByStudent(@RequestParam("studentId") String studentId) {
+    /** GET /api/results/student/{studentId} */
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<Result>> getResultsByStudent(@PathVariable String studentId) {
         return ResponseEntity.ok(resultService.getResultsByStudent(studentId));
     }
 
-    @GetMapping("/exam")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByExam(@RequestParam("examId") String examId) {
-        return ResponseEntity.ok(resultService.getResultsByExam(examId));
+    /** GET /api/results/exam/{examCode} */
+    @GetMapping("/exam/{examCode}")
+    public ResponseEntity<List<Result>> getResultsByExam(@PathVariable String examCode) {
+        return ResponseEntity.ok(resultService.getResultsByExam(examCode));
     }
 
-    @GetMapping("/statistics")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<ExamStatistics> getExamStatistics(@RequestParam("examId") Long examId) {
-        return ResponseEntity.ok(resultService.getExamStatistics(examId));
-    }
-
-    @GetMapping("/course")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByCourse(@RequestParam("courseCode") String courseCode) {
+    /** GET /api/results/course/{courseCode} */
+    @GetMapping("/course/{courseCode}")
+    public ResponseEntity<List<Result>> getResultsByCourse(@PathVariable String courseCode) {
         return ResponseEntity.ok(resultService.getResultsByCourse(courseCode));
     }
 
-    @GetMapping("/status")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<List<Result>> getResultsByStatus(@RequestParam("status") String status) {
+    /** GET /api/results/status/{status} — ADMIN only */
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Result>> getResultsByStatus(@PathVariable String status) {
         return ResponseEntity.ok(resultService.getResultsByStatus(status));
     }
 
+    /** GET /api/results/statistics/{examId} */
+    @GetMapping("/statistics/{examId}")
+    public ResponseEntity<ExamStatistics> getExamStatistics(@PathVariable Long examId) {
+        return ResponseEntity.ok(resultService.getExamStatistics(examId));
+    }
+
+    /** PUT /api/results/{id} */
+    @PutMapping("/{id}")
+    public ResponseEntity<Result> updateResult(@PathVariable Long id,
+                                               @Valid @RequestBody ResultRequest request) {
+        return ResponseEntity.ok(resultService.updateResult(id, request));
+    }
+
+    /** PUT /api/results/{id}/status */
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('FACULTY')")
-    public ResponseEntity<Void> updateResultStatus(@PathVariable Long id, @RequestParam String status) {
+    public ResponseEntity<Map<String, String>> updateResultStatus(@PathVariable Long id,
+                                                                   @RequestParam String status) {
         resultService.updateResultStatus(id, status);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok(Map.of("message", "Status updated successfully"));
     }
 }

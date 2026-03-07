@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
@@ -21,11 +22,12 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findByEndDateAfter(Date date);
     List<Exam> findByStartDateAfter(Date date);
     List<Exam> findByEndDateBefore(Date date);
-    
-    // Optimized query methods
     List<Exam> findByCourseCodeAndType(String courseCode, Exam.ExamType type);
     List<Exam> findByCourseCodeAndStartDateAfter(String courseCode, Date startDate);
     List<Exam> findByCourseCodeAndEndDateBefore(String courseCode, Date endDate);
     List<Exam> findByTypeAndStartDateAfter(Exam.ExamType type, Date startDate);
     List<Exam> findByTypeAndEndDateBefore(Exam.ExamType type, Date endDate);
+    // Tenant-scoped
+    List<Exam> findByTenantId(UUID tenantId);
+    long countByTenantId(UUID tenantId);
 }

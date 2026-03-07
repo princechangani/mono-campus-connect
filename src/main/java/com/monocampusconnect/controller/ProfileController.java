@@ -1,18 +1,17 @@
 package com.monocampusconnect.controller;
 
+import com.monocampusconnect.config.JwtConfig;
 import com.monocampusconnect.dto.ProfileRequest;
 import com.monocampusconnect.model.User;
 import com.monocampusconnect.service.ProfileService;
-import com.monocampusconnect.exception.ApiException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -21,53 +20,68 @@ public class ProfileController {
     @Autowired
     private ProfileService profileService;
 
-    @GetMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<User> getProfile(@RequestPart("userId") Long userId) {
+    @Autowired
+    private JwtConfig jwtConfig;
+
+    private Long resolveUserId(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return jwtConfig.extractUserId(header.substring(7));
+        }
+        throw new RuntimeException("Unable to resolve user from token");
+    }
+
+    /** GET /api/profile — get own profile */
+    @GetMapping
+    public ResponseEntity<User> getMyProfile(HttpServletRequest req) {
+        return ResponseEntity.ok(profileService.getProfile(resolveUserId(req)));
+    }
+
+    /** GET /api/profile/{userId} — admin gets any profile */
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getProfile(@PathVariable Long userId) {
         return ResponseEntity.ok(profileService.getProfile(userId));
     }
 
-    @PutMapping("/{userId}/profile")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<?> updateProfile(
-            @PathVariable Long userId,
+    /** PUT /api/profile — update own profile (multipart) */
+    @PutMapping(consumes = "multipart/form-data")
+    public ResponseEntity<User> updateProfile(
+            HttpServletRequest req,
             @RequestPart(value = "firstName", required = false) String firstName,
             @RequestPart(value = "lastName", required = false) String lastName,
-            @RequestPart(value = "email", required = false) String email,
-            @RequestPart(value = "phone", required = false) String phone,
+            @RequestPart(value = "phoneNumber", required = false) String phoneNumber,
             @RequestPart(value = "address", required = false) String address,
-            @RequestPart(required = false) MultipartFile profilePicture) {
-        
-        try {
-            ProfileRequest request = new ProfileRequest();
-            request.setFirstName(firstName);
-            request.setLastName(lastName);
-            request.setEmail(email);
-            request.setPhoneNumber(phone);
-            request.setAddress(address);
-            
-            return ResponseEntity.ok(profileService.updateProfile(userId, request, profilePicture));
-        } catch (ApiException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while updating profile: " + e.getMessage());
-        }
+            @RequestPart(value = "department", required = false) String department,
+            @RequestPart(value = "semester", required = false) String semester,
+            @RequestPart(value = "enrollmentNumber", required = false) String enrollmentNumber,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) throws Exception {
+
+        Long userId = resolveUserId(req);
+        ProfileRequest request = new ProfileRequest();
+        request.setFirstName(firstName);
+        request.setLastName(lastName);
+        request.setPhoneNumber(phoneNumber);
+        request.setAddress(address);
+        request.setDepartment(department);
+        request.setSemester(semester);
+        request.setEnrollmentNumber(enrollmentNumber);
+        return ResponseEntity.ok(profileService.updateProfile(userId, request, profilePicture));
     }
 
-    @DeleteMapping("/{userId}/picture")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<Void> deleteProfilePicture(@PathVariable Long userId) {
-        profileService.deleteProfilePicture(userId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    /** DELETE /api/profile/picture — remove profile picture */
+    @DeleteMapping("/picture")
+    public ResponseEntity<Map<String, String>> deleteProfilePicture(HttpServletRequest req) {
+        profileService.deleteProfilePicture(resolveUserId(req));
+        return ResponseEntity.ok(Map.of("message", "Profile picture removed"));
     }
 
-    @PostMapping("/{userId}/password")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<Void> changePassword(@PathVariable Long userId,
-                                              @RequestParam String currentPassword,
-                                              @RequestParam String newPassword) {
-        profileService.changePassword(userId, currentPassword, newPassword);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    /** PUT /api/profile/password — change password */
+    @PutMapping("/password")
+    public ResponseEntity<Map<String, String>> changePassword(
+            HttpServletRequest req,
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword) {
+        profileService.changePassword(resolveUserId(req), currentPassword, newPassword);
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 }
