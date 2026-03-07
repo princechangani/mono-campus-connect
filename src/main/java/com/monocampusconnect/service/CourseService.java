@@ -24,6 +24,7 @@ public class CourseService {
 
     public Course createCourse(Course course) {
         course.setTenantId(currentTenant());
+        if (course.getSubjectType() == null) course.setSubjectType(Course.SubjectType.COMPULSORY);
         return courseRepository.save(course);
     }
 
@@ -44,6 +45,28 @@ public class CourseService {
         return courseRepository.findByTenantId(currentTenant());
     }
 
+    public List<Course> filterCourses(String semester, String department, String instructor,
+                                      String facultyId, Integer credits,
+                                      String subjectType, String category) {
+        Course.SubjectType type = null;
+        if (subjectType != null && !subjectType.isBlank()) {
+            try { type = Course.SubjectType.valueOf(subjectType.toUpperCase()); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        return courseRepository.filterCourses(
+            currentTenant(),
+            blankToNull(semester),
+            blankToNull(department),
+            blankToNull(instructor),
+            blankToNull(facultyId),
+            credits,
+            type,
+            blankToNull(category)
+        );
+    }
+
+    private String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
+
     public Course updateCourse(Long id, Course courseDetails) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Course not found", 404));
@@ -54,7 +77,10 @@ public class CourseService {
         course.setDepartment(courseDetails.getDepartment());
         course.setCredits(courseDetails.getCredits());
         course.setInstructor(courseDetails.getInstructor());
+        course.setFacultyId(courseDetails.getFacultyId());
         course.setSemester(courseDetails.getSemester());
+        if (courseDetails.getSubjectType() != null) course.setSubjectType(courseDetails.getSubjectType());
+        course.setCategory(courseDetails.getCategory());
         return courseRepository.save(course);
     }
 

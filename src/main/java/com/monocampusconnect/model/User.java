@@ -1,5 +1,6 @@
 package com.monocampusconnect.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,13 +19,15 @@ public class User {
     private UUID tenantId;
 
     private String email;
+    @JsonIgnore
     private String password;
     private String firstName;
     private String lastName;
-    
+
+    @JsonIgnore
     @Lob
     private byte[] profilePicture;
-    
+
     private String department;
     private String semester;
     private String enrollmentNumber;
@@ -32,6 +35,7 @@ public class User {
     private String phoneNumber;
     private String address;
     private Date dateOfBirth;
+    @Enumerated(EnumType.STRING)
     private Role role;
     private boolean enabled;
     private Date createdAt;

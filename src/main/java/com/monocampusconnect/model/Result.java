@@ -18,7 +18,7 @@ public class Result {
     @Column(name = "tenant_id")
     private UUID tenantId;
 
-    private String studentId;
+    private Long studentId;
     private String examCode;
     private String courseCode;
 

@@ -36,7 +36,7 @@ public class ResultService {
         }
         Exam exam = examRepository.findById(request.getExamId())
                 .orElseThrow(() -> new ApiException("Exam not found", 404));
-        if (!exam.getEnrolledStudents().contains(request.getStudentId())) {
+        if (!exam.getEnrolledStudents().contains(String.valueOf(request.getStudentId()))) {
             throw new ApiException("Student not enrolled in this exam", 400);
         }
         Result result = new Result();
@@ -62,12 +62,12 @@ public class ResultService {
                 .orElseThrow(() -> new ApiException("Result not found", 404));
     }
 
-    public Result getResultByStudentAndExam(String studentId, String examCode) {
+    public Result getResultByStudentAndExam(Long studentId, String examCode) {
         return resultRepository.findByStudentIdAndExamCode(studentId, examCode)
                 .orElseThrow(() -> new ApiException("Result not found", 404));
     }
 
-    public List<Result> getResultsByStudent(String studentId) {
+    public List<Result> getResultsByStudent(Long studentId) {
         return resultRepository.findByTenantIdAndStudentId(currentTenant(), studentId);
     }
 

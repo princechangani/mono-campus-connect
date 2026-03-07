@@ -40,7 +40,7 @@ public class ResultController {
 
     /** GET /api/results/student/{studentId} */
     @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<Result>> getResultsByStudent(@PathVariable String studentId) {
+    public ResponseEntity<List<Result>> getResultsByStudent(@PathVariable Long studentId) {
         return ResponseEntity.ok(resultService.getResultsByStudent(studentId));
     }
 

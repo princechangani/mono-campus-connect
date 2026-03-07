@@ -28,6 +28,7 @@ public class SecurityConfig {
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             "/api/auth/**",
             "/api/otp/**",
+            "/api/dev/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/api/docs/**"
@@ -49,7 +50,6 @@ public class SecurityConfig {
                     // Admin-only management
                     auth.requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN");
                     auth.requestMatchers("/api/departments/**").hasAnyRole("ADMIN", "SUPER_ADMIN");
-                    auth.requestMatchers("/api/timetable").hasAnyRole("ADMIN", "SUPER_ADMIN");
                     auth.requestMatchers("/api/timetable/**").hasAnyRole("ADMIN", "FACULTY", "STUDENT", "SUPER_ADMIN");
 
                     // Faculty + Admin
@@ -83,6 +83,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
                 "http://localhost:5173",
                 "http://localhost:5174",
                 "http://localhost:5175"

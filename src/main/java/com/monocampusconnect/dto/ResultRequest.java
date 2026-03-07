@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 public class ResultRequest {
-    private String studentId;
+    private Long studentId;
     private Long examId;
     private String courseCode;
     private List<ResultDetail> resultDetails;

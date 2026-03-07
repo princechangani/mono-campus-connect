@@ -1,6 +1,7 @@
 package com.monocampusconnect.service;
 
 import com.monocampusconnect.config.JwtConfig;
+import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.dto.AuthRequest;
 import com.monocampusconnect.model.User;
 import com.monocampusconnect.repository.UserRepository;
@@ -26,7 +27,7 @@ public class AuthService {
 
     public User register(AuthRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use: " + request.getEmail());
+            throw new ApiException("Email already in use: " + request.getEmail(), 409);
         }
         User user = new User();
         user.setEmail(request.getEmail());
@@ -42,16 +43,16 @@ public class AuthService {
 
     public User login(AuthRequest request) {
         if (request == null) {
-            throw new RuntimeException("Request body is required");
+            throw new ApiException("Request body is required", 400);
         }
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
+                .orElseThrow(() -> new ApiException("No account found with email: " + request.getEmail(), 404));
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("Account is disabled. Please contact admin.");
+            throw new ApiException("Account is disabled. Please contact admin.", 403);
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ApiException("Invalid credentials", 401);
         }
         return user;
     }

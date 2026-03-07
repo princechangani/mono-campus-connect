@@ -20,8 +20,17 @@ public class Course {
     private String courseName;
     private String department;
     private int credits;
-    private String instructor;
+    private String instructor;   // faculty name
+    private String facultyId;    // faculty user id / FAC001 etc.
     private String semester;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subject_type")
+    private SubjectType subjectType = SubjectType.COMPULSORY;
 
+    private String category;     // e.g. "Core", "Lab", "Elective", "Project"
+
+    public enum SubjectType {
+        COMPULSORY, OPTIONAL
+    }
 }

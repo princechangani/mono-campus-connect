@@ -32,7 +32,7 @@ public class AuthController {
         
         User user = authService.login(request);
         String token = authService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getRole().name(), "Login successful"));
+        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getRole().name(), "Login successful", user));
     }
 
     @PostMapping("/register")

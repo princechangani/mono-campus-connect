@@ -10,14 +10,14 @@ import java.util.UUID;
 
 @Repository
 public interface ResultRepository extends JpaRepository<Result, Long> {
-    Optional<Result> findByStudentIdAndExamCode(String studentId, String examCode);
-    List<Result> findByStudentId(String studentId);
+    Optional<Result> findByStudentIdAndExamCode(Long studentId, String examCode);
+    List<Result> findByStudentId(Long studentId);
     List<Result> findByExamCode(String examCode);
     List<Result> findByCourseCode(String courseCode);
     List<Result> findByStatus(String status);
     List<Result> findByExamId(Long examId);
     // Tenant-scoped
     List<Result> findByTenantId(UUID tenantId);
-    List<Result> findByTenantIdAndStudentId(UUID tenantId, String studentId);
+    List<Result> findByTenantIdAndStudentId(UUID tenantId, Long studentId);
     long countByTenantId(UUID tenantId);
 }
