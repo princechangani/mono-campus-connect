@@ -141,7 +141,7 @@ public class MaterialService {
         MaterialStats stats = new MaterialStats();
         if (!materials.isEmpty()) {
             Material first = materials.get(0);
-            stats.setMaterialId(first.getId());
+            stats.setMaterialId(first.getMaterialId());
             stats.setTitle(first.getTitle());
             stats.setCourseName(first.getCourseCode());
             stats.setFileName(first.getFileType());
@@ -162,5 +162,24 @@ public class MaterialService {
     public List<Material> getRecentMaterials(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return materialRepository.findTopByOrderByUploadedDateDesc(pageable);
+    }
+
+    public Material getMaterialByPublicId(UUID publicId) {
+        Material material = materialRepository.findByMaterialsPublicIdAndTenantId(publicId, currentTenant())
+                .orElseThrow(() -> new ApiException("Material not found", 404));
+        material.setDownloadCount(material.getDownloadCount() + 1);
+        return materialRepository.save(material);
+    }
+
+    public Material updateMaterialByPublicId(UUID publicId, MaterialRequest request, MultipartFile file) throws IOException {
+        Material material = materialRepository.findByMaterialsPublicIdAndTenantId(publicId, currentTenant())
+                .orElseThrow(() -> new ApiException("Material not found", 404));
+        return updateMaterial(material.getId(), request, file);
+    }
+
+    public void deleteMaterialByPublicId(UUID publicId) {
+        Material material = materialRepository.findByMaterialsPublicIdAndTenantId(publicId, currentTenant())
+                .orElseThrow(() -> new ApiException("Material not found", 404));
+        deleteMaterial(material.getId());
     }
 }

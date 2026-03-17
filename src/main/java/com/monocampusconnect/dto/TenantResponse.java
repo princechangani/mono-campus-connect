@@ -26,7 +26,7 @@ public class TenantResponse {
 
     public static TenantResponse from(Tenant tenant) {
         TenantResponse r = new TenantResponse();
-        r.setId(tenant.getId());
+        r.setId(tenant.getTenantId());
         r.setName(tenant.getName());
         r.setCode(tenant.getCode());
         r.setContactEmail(tenant.getContactEmail());

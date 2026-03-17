@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/materials")
@@ -48,10 +49,10 @@ public class MaterialController {
         return ResponseEntity.ok(materialService.getAllMaterials());
     }
 
-    /** GET /api/materials/{id} — download/view + increments count */
-    @GetMapping("/{id}")
-    public ResponseEntity<Material> getMaterial(@PathVariable Long id) {
-        return ResponseEntity.ok(materialService.getMaterial(id));
+    /** GET /api/materials/{publicId} — download/view + increments count */
+    @GetMapping("/{publicId}")
+    public ResponseEntity<Material> getMaterial(@PathVariable UUID publicId) {
+        return ResponseEntity.ok(materialService.getMaterialByPublicId(publicId));
     }
 
     /** GET /api/materials/course/{courseCode} */
@@ -84,10 +85,10 @@ public class MaterialController {
         return ResponseEntity.ok(materialService.getMaterialStats());
     }
 
-    /** PUT /api/materials/{id} — update with optional new file */
-    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    /** PUT /api/materials/{publicId} — update with optional new file */
+    @PutMapping(value = "/{publicId}", consumes = "multipart/form-data")
     public ResponseEntity<Material> updateMaterial(
-            @PathVariable Long id,
+            @PathVariable UUID publicId,
             @RequestPart("courseCode") String courseCode,
             @RequestPart("title") String title,
             @RequestPart(value = "description", required = false) String description,
@@ -101,13 +102,13 @@ public class MaterialController {
         request.setDescription(description);
         request.setType(type);
         request.setUploadedBy(uploadedBy);
-        return ResponseEntity.ok(materialService.updateMaterial(id, request, file));
+        return ResponseEntity.ok(materialService.updateMaterialByPublicId(publicId, request, file));
     }
 
-    /** DELETE /api/materials/{id} */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteMaterial(@PathVariable Long id) {
-        materialService.deleteMaterial(id);
+    /** DELETE /api/materials/{publicId} */
+    @DeleteMapping("/{publicId}")
+    public ResponseEntity<Map<String, String>> deleteMaterial(@PathVariable UUID publicId) {
+        materialService.deleteMaterialByPublicId(publicId);
         return ResponseEntity.ok(Map.of("message", "Material deleted successfully"));
     }
 }

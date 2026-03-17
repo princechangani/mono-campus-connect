@@ -3,6 +3,7 @@ package com.monocampusconnect.service;
 import com.monocampusconnect.dto.TenantRequest;
 import com.monocampusconnect.dto.TenantResponse;
 import com.monocampusconnect.exception.ApiException;
+import com.monocampusconnect.model.Role;
 import com.monocampusconnect.model.Tenant;
 import com.monocampusconnect.model.User;
 import com.monocampusconnect.repository.TenantRepository;
@@ -29,6 +30,9 @@ public class TenantService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RoleService roleService;
+
     /**
      * Onboard a new college tenant and create its first ADMIN user.
      */
@@ -41,7 +45,6 @@ public class TenantService {
             throw new ApiException("College name already registered: " + request.getName(), 409);
         }
 
-        // Create the tenant
         Tenant tenant = new Tenant();
         tenant.setName(request.getName());
         tenant.setCode(request.getCode().toUpperCase());
@@ -55,18 +58,17 @@ public class TenantService {
         tenant.setEnabled(true);
         Tenant saved = tenantRepository.save(tenant);
 
-        // Create the default ADMIN user for this tenant
         User admin = new User();
-        admin.setTenantId(saved.getId());
+        admin.setTenantId(saved.getTenantId());
         admin.setEmail(request.getContactEmail());
         admin.setPassword(passwordEncoder.encode(request.getAdminPassword()));
         admin.setFirstName(request.getAdminFirstName());
         admin.setLastName(request.getAdminLastName());
-        admin.setRole(User.Role.ADMIN);
         admin.setEnabled(true);
         admin.setCreatedAt(new Date());
         admin.setUpdatedAt(new Date());
-        userRepository.save(admin);
+        User savedAdmin = userRepository.save(admin);
+        roleService.assignInitialRole(savedAdmin, Role.RoleName.ADMIN);
 
         return TenantResponse.from(saved);
     }
@@ -108,4 +110,3 @@ public class TenantService {
         return TenantResponse.from(tenantRepository.save(tenant));
     }
 }
-

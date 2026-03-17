@@ -29,10 +29,11 @@ public class AuthController {
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new ApiException("Password is required", 400);
         }
-        
+
         User user = authService.login(request);
         String token = authService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getRole().name(), "Login successful", user));
+        String primaryRole = authService.getPrimaryRole(user);
+        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), primaryRole, "Login successful", user, authService.getRoleNames(user)));
     }
 
     @PostMapping("/register")
@@ -52,8 +53,9 @@ public class AuthController {
         if (request.getRole() == null || request.getRole().trim().isEmpty()) {
             throw new ApiException("Role is required", 400);
         }
-        
+
         User user = authService.register(request);
-        return ResponseEntity.ok(new AuthResponse(user.getEmail(), user.getRole().name(), "Registration successful"));
+        String primaryRole = authService.getPrimaryRole(user);
+        return ResponseEntity.ok(new AuthResponse(user.getEmail(), primaryRole, "Registration successful"));
     }
 }

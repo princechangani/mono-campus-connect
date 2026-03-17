@@ -13,7 +13,11 @@ import java.util.UUID;
 public class Result {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "results_id")
+    private Long resultId;
+
+    @Column(name = "results_public_id", nullable = false, unique = true, updatable = false)
+    private UUID resultsPublicId;
 
     @Column(name = "tenant_id")
     private UUID tenantId;
@@ -34,8 +38,50 @@ public class Result {
     private String status; 
     private String comments;
     private Date resultDate;
+
+    @Column(name = "created_at")
     private Date createdAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_at")
     private Date updatedAt;
 
-  
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+    public Long getId() {
+        return this.resultId;
+    }
+
+    public void setId(Long id) {
+        this.resultId = id;
+    }
+
+    @PrePersist
+    protected void onCreatePublicId() {
+        if (resultsPublicId == null) {
+            resultsPublicId = UUID.randomUUID();
+        }
+        if (createdAt == null) {
+            createdAt = new Date();
+        }
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdateAudit() {
+        updatedAt = new Date();
+    }
+
 }

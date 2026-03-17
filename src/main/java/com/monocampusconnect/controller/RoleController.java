@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -30,50 +31,51 @@ public class RoleController {
     }
 
     /**
-     * GET /api/roles/user/{userId}
+     * GET /api/roles/user/{userPublicId}
      * Get all roles assigned to a specific user.
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user/{userPublicId}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
-    public ResponseEntity<List<Role>> getUserRoles(@PathVariable Long userId) {
-        return ResponseEntity.ok(roleService.getUserRoles(userId));
+    public ResponseEntity<List<Role>> getUserRoles(@PathVariable UUID userPublicId) {
+        return ResponseEntity.ok(roleService.getUserRolesByPublicId(userPublicId));
     }
 
     /**
-     * POST /api/roles/assign
+     * POST /api/roles/user/{userPublicId}/assign
      * Assign one or more roles to a user (additive — does not remove existing roles).
      * Body: { "userId": 1, "roles": ["ADMIN", "FACULTY"] }
      */
-    @PostMapping("/assign")
+    @PostMapping("/user/{userPublicId}/assign")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
-    public ResponseEntity<User> assignRoles(@RequestBody RoleAssignRequest request) {
-        User updated = roleService.assignRoles(request.getUserId(), request.getRoles());
+    public ResponseEntity<User> assignRoles(@PathVariable UUID userPublicId,
+                                            @RequestBody RoleAssignRequest request) {
+        User updated = roleService.assignRolesByPublicId(userPublicId, request.getRoles());
         return ResponseEntity.ok(updated);
     }
 
     /**
-     * PUT /api/roles/set
+     * PUT /api/roles/user/{userPublicId}/set
      * Replace ALL roles for a user with the provided list.
      * Body: { "userId": 1, "roles": ["FACULTY", "STUDENT"] }
      */
-    @PutMapping("/set")
+    @PutMapping("/user/{userPublicId}/set")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
-    public ResponseEntity<User> setRoles(@RequestBody RoleAssignRequest request) {
-        User updated = roleService.setRoles(request.getUserId(), request.getRoles());
+    public ResponseEntity<User> setRoles(@PathVariable UUID userPublicId,
+                                         @RequestBody RoleAssignRequest request) {
+        User updated = roleService.setRolesByPublicId(userPublicId, request.getRoles());
         return ResponseEntity.ok(updated);
     }
 
     /**
-     * DELETE /api/roles/user/{userId}/remove/{roleName}
+     * DELETE /api/roles/user/{userPublicId}/remove/{roleName}
      * Remove a single role from a user.
      */
-    @DeleteMapping("/user/{userId}/remove/{roleName}")
+    @DeleteMapping("/user/{userPublicId}/remove/{roleName}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<Map<String, String>> removeRole(
-            @PathVariable Long userId,
+            @PathVariable UUID userPublicId,
             @PathVariable String roleName) {
-        roleService.removeRole(userId, roleName);
-        return ResponseEntity.ok(Map.of("message", "Role " + roleName + " removed from user " + userId));
+        roleService.removeRoleByPublicId(userPublicId, roleName);
+        return ResponseEntity.ok(Map.of("message", "Role " + roleName + " removed from user " + userPublicId));
     }
 }
-

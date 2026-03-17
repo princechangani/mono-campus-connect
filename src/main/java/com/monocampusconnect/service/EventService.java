@@ -68,6 +68,6 @@ public class EventService {
 
     public void deleteEvent(Long id) {
         Event event = getEvent(id);
-        eventRepository.deleteById(event.getId());
+        eventRepository.deleteById(event.getEventId());
     }
 }

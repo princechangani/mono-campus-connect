@@ -14,7 +14,11 @@ public class Attendance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "attendance_id")
+    private Long attendanceId;
+
+    @Column(name = "attendance_public_id", nullable = false, unique = true, updatable = false)
+    private UUID attendancePublicId;
 
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
@@ -42,13 +46,50 @@ public class Attendance {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
     @PrePersist
     protected void onCreate() {
-        createdAt = new Date();
+        Date now = new Date();
+        createdAt = now;
+        updatedAt = now;
+        if (attendancePublicId == null) {
+            attendancePublicId = UUID.randomUUID();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdateAudit() {
+        updatedAt = new Date();
+    }
+
+    public Long getId() {
+        return this.attendanceId;
+    }
+
+    public void setId(Long id) {
+        this.attendanceId = id;
     }
 
     public enum AttendanceStatus {
         PRESENT, ABSENT, LATE
     }
 }
-

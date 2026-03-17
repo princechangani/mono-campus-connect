@@ -31,4 +31,5 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByUploadedDateAfter(Date date);
     List<Material> findByUploadedDateBefore(Date date);
     List<Material> findByFileType(String fileType);
+    java.util.Optional<Material> findByMaterialsPublicIdAndTenantId(UUID materialsPublicId, UUID tenantId);
 }

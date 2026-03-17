@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -34,8 +33,6 @@ public class JwtConfig {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // ─── Claim Extractors ────────────────────────────────────────────────────
-
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -51,7 +48,6 @@ public class JwtConfig {
             if (rolesObj instanceof List<?>) {
                 return (List<String>) rolesObj;
             }
-            // Fallback: wrap single role claim in a list
             String singleRole = claims.get("role", String.class);
             return singleRole != null ? List.of(singleRole) : List.of();
         });
@@ -86,22 +82,20 @@ public class JwtConfig {
         return extractExpiration(token).before(new Date());
     }
 
-    // ─── Token Generation ────────────────────────────────────────────────────
-
     /** Generate token embedding all roles from the user_role_mapping table */
     public String generateToken(User user, Collection<String> roleNames) {
         Map<String, Object> claims = new HashMap<>();
-        // Legacy single-role claim for backward compatibility
-        claims.put("role", user.getRole().name());
-        claims.put("userId", user.getId());
+        List<String> roles = roleNames == null || roleNames.isEmpty()
+                ? List.of("USER")
+                : new ArrayList<>(roleNames);
+
+        claims.put("role", roles.get(0));
+        claims.put("roles", roles);
+        claims.put("userId", user.getUserId());
         if (user.getTenantId() != null) {
             claims.put("tenantId", user.getTenantId().toString());
         }
-        // Multi-role list claim
-        List<String> roles = roleNames.isEmpty()
-                ? List.of(user.getRole().name())
-                : new ArrayList<>(roleNames);
-        claims.put("roles", roles);
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
@@ -111,12 +105,12 @@ public class JwtConfig {
                 .compact();
     }
 
-    /** Legacy overload — uses only the single legacy role field */
+    /** Legacy overload kept for compatibility. */
     public String generateToken(User user) {
-        return generateToken(user, List.of(user.getRole().name()));
+        return generateToken(user, List.of());
     }
 
-    /** Legacy overload kept for compatibility — prefer generateToken(User) */
+    /** Legacy overload kept for compatibility — prefer generateToken(User, roles). */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
@@ -127,8 +121,6 @@ public class JwtConfig {
                 .signWith(getSigningKey())
                 .compact();
     }
-
-    // ─── Validation ──────────────────────────────────────────────────────────
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -146,7 +138,7 @@ public class JwtConfig {
 
     public boolean isAdmin(String token) {
         try {
-            return "ADMIN".equalsIgnoreCase(extractRole(token));
+            return extractRoles(token).stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r));
         } catch (Exception e) {
             return false;
         }
@@ -154,8 +146,8 @@ public class JwtConfig {
 
     public boolean isAdminOrFaculty(String token) {
         try {
-            String role = extractRole(token);
-            return "FACULTY".equals(role) || "ADMIN".equals(role);
+            List<String> roles = extractRoles(token);
+            return roles.contains("FACULTY") || roles.contains("ADMIN");
         } catch (Exception e) {
             return false;
         }

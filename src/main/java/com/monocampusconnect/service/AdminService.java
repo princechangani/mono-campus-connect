@@ -45,14 +45,8 @@ public class AdminService {
             throw new ApiException("Email already in use in this college: " + request.getEmail(), 409);
         }
 
-        User.Role role;
-        try {
-            role = User.Role.valueOf(request.getRole().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException("Invalid role: " + request.getRole() + ". Must be FACULTY or STUDENT", 400);
-        }
-
-        if (role == User.Role.SUPER_ADMIN) {
+        Role.RoleName roleName = roleService.parseRoleName(request.getRole());
+        if (roleName == Role.RoleName.SUPER_ADMIN) {
             throw new ApiException("Cannot create SUPER_ADMIN via this endpoint", 403);
         }
 
@@ -62,7 +56,6 @@ public class AdminService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setRole(role);
         user.setDepartment(request.getDepartment());
         user.setSemester(request.getSemester());
         user.setEnrollmentNumber(request.getEnrollmentNumber());
@@ -75,9 +68,7 @@ public class AdminService {
         user.setUpdatedAt(new Date());
 
         User savedUser = userRepository.save(user);
-
-        // Register role in user_role_mapping for multi-role support
-        roleService.assignInitialRole(savedUser, Role.RoleName.valueOf(role.name()));
+        roleService.assignInitialRole(savedUser, roleName);
 
         return savedUser;
     }
@@ -87,13 +78,7 @@ public class AdminService {
     }
 
     public List<User> getUsersByRole(String roleName) {
-        User.Role role;
-        try {
-            role = User.Role.valueOf(roleName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException("Invalid role: " + roleName, 400);
-        }
-        return userRepository.findByTenantIdAndRole(currentTenant(), role);
+        return roleService.getUsersByRole(roleService.parseRoleName(roleName), currentTenant());
     }
 
     public User getUserById(Long userId) {
@@ -104,6 +89,12 @@ public class AdminService {
             throw new ApiException("User not found in this college", 404);
         }
         return user;
+    }
+
+return     public User getUserByPublicId(UUID userPublicId) {
+        UUID tenantId = currentTenant();
+        return userRepository.findByUsersPublicIdAndTenantId(userPublicId, tenantId)
+                .orElseThrow(() -> new ApiException("User not found in this college", 404));
     }
 
     @Transactional
@@ -129,6 +120,11 @@ public class AdminService {
     }
 
     @Transactional
+    public User updateUserByPublicId(UUID userPublicId, AdminUserRequest request) {
+        return updateUser(getUserByPublicId(userPublicId).getId(), request);
+    }
+
+    @Transactional
     public void setUserEnabled(Long userId, boolean enabled) {
         User user = getUserById(userId);
         user.setEnabled(enabled);
@@ -137,9 +133,19 @@ public class AdminService {
     }
 
     @Transactional
+    public void setUserEnabledByPublicId(UUID userPublicId, boolean enabled) {
+        setUserEnabled(getUserByPublicId(userPublicId).getId(), enabled);
+    }
+
+    @Transactional
     public void deleteUser(Long userId) {
         User user = getUserById(userId);
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteUserByPublicId(UUID userPublicId) {
+        deleteUser(getUserByPublicId(userPublicId).getId());
     }
 
     // ─── Dashboard Stats ─────────────────────────────────────────────────────
@@ -147,8 +153,8 @@ public class AdminService {
     public AdminDashboardStats getDashboardStats() {
         UUID tenantId = currentTenant();
         AdminDashboardStats stats = new AdminDashboardStats();
-        stats.setTotalStudents(userRepository.countByTenantIdAndRole(tenantId, User.Role.STUDENT));
-        stats.setTotalFaculty(userRepository.countByTenantIdAndRole(tenantId, User.Role.FACULTY));
+        stats.setTotalStudents(roleService.countUsersByRole(Role.RoleName.STUDENT, tenantId));
+        stats.setTotalFaculty(roleService.countUsersByRole(Role.RoleName.FACULTY, tenantId));
         stats.setTotalCourses(courseRepository.countByTenantId(tenantId));
         stats.setTotalExams(examRepository.countByTenantId(tenantId));
         stats.setTotalMaterials(materialRepository.countByTenantId(tenantId));

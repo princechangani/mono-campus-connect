@@ -13,7 +13,11 @@ public class TimetableEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "timetable_entries_id")
+    private Long timetableEntryId;
+
+    @Column(name = "timetable_entries_public_id", nullable = false, unique = true, updatable = false)
+    private UUID timetableEntriesPublicId;
 
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
@@ -40,18 +44,44 @@ public class TimetableEntry {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     @PrePersist
     protected void onCreate() {
         createdAt = new Date();
         updatedAt = new Date();
+        if (timetableEntriesPublicId == null) {
+            timetableEntriesPublicId = UUID.randomUUID();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = new Date();
     }
-}
 
+    public Long getId() {
+        return this.timetableEntryId;
+    }
+
+    public void setId(Long id) {
+        this.timetableEntryId = id;
+    }
+}

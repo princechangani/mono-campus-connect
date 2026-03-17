@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
@@ -26,12 +27,21 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
 
     void deleteByUser(User user);
 
-    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role WHERE ur.user.id = :userId")
+    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role WHERE ur.user.userId = :userId")
     List<UserRole> findByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.user WHERE ur.role.roleName = :roleName AND ur.user.tenantId = :tenantId")
+    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.user WHERE ur.role.code = :roleName AND ur.user.tenantId = :tenantId")
     List<UserRole> findByRoleNameAndTenantId(
             @Param("roleName") Role.RoleName roleName,
-            @Param("tenantId") java.util.UUID tenantId);
-}
+            @Param("tenantId") UUID tenantId);
 
+    @Query("SELECT DISTINCT ur.user FROM UserRole ur WHERE ur.role.code = :roleName AND ur.user.tenantId = :tenantId")
+    List<User> findUsersByRoleNameAndTenantId(
+            @Param("roleName") Role.RoleName roleName,
+            @Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COUNT(DISTINCT ur.user.userId) FROM UserRole ur WHERE ur.role.code = :roleName AND ur.user.tenantId = :tenantId")
+    long countUsersByRoleNameAndTenantId(
+            @Param("roleName") Role.RoleName roleName,
+            @Param("tenantId") UUID tenantId);
+}

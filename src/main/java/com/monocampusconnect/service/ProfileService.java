@@ -37,17 +37,14 @@ public class ProfileService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Build authorities from user_role_mapping (multi-role support)
-        List<UserRole> userRoles = userRoleRepository.findByUserId(user.getId());
+        List<UserRole> userRoles = userRoleRepository.findByUserId(user.getUserId());
         List<SimpleGrantedAuthority> authorities;
         if (!userRoles.isEmpty()) {
             authorities = userRoles.stream()
-                    .map(ur -> new SimpleGrantedAuthority("ROLE_" + ur.getRole().getRoleName().name()))
+                    .map(ur -> new SimpleGrantedAuthority("ROLE_" + ur.getRole().getCode().name()))
                     .collect(Collectors.toList());
         } else {
-            // Fallback to legacy single role field
-            authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+            authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
         }
 
         return new org.springframework.security.core.userdetails.User(

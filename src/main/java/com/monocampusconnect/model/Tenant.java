@@ -13,7 +13,11 @@ public class Tenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(name = "tenants_id")
+    private UUID tenantId;
+
+    @Column(name = "tenants_public_id", nullable = false, unique = true, updatable = false)
+    private UUID tenantsPublicId;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -33,20 +37,49 @@ public class Tenant {
     private boolean enabled;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at")
     private Date createdAt;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_at")
     private Date updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "deleted_at")
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     public enum SubscriptionPlan {
         BASIC, PRO, ENTERPRISE
+    }
+
+    public UUID getId() {
+        return this.tenantId;
+    }
+
+    public void setId(UUID id) {
+        this.tenantId = id;
     }
 
     @PrePersist
     protected void onCreate() {
         createdAt = new Date();
         updatedAt = new Date();
-        if (enabled == false && createdAt == null) {
+        if (tenantsPublicId == null) {
+            tenantsPublicId = UUID.randomUUID();
+        }
+        if (!enabled && createdAt == null) {
             enabled = true;
         }
     }
@@ -56,4 +89,3 @@ public class Tenant {
         updatedAt = new Date();
     }
 }
-

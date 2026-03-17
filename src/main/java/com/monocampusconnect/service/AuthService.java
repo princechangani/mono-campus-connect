@@ -1,11 +1,10 @@
 package com.monocampusconnect.service;
 
 import com.monocampusconnect.config.JwtConfig;
-import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.dto.AuthRequest;
+import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.Role;
 import com.monocampusconnect.model.User;
-import com.monocampusconnect.model.UserRole;
 import com.monocampusconnect.repository.UserRepository;
 import com.monocampusconnect.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,20 +40,19 @@ public class AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ApiException("Email already in use: " + request.getEmail(), 409);
         }
+        Role.RoleName roleName = roleService.parseRoleName(request.getRole());
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        User.Role role = User.Role.valueOf(request.getRole().toUpperCase());
-        user.setRole(role);
         user.setEnabled(true);
         user.setCreatedAt(new Date());
         user.setUpdatedAt(new Date());
         User saved = userRepository.save(user);
 
-        // Register role in user_role_mapping for multi-role support
-        roleService.assignInitialRole(saved, Role.RoleName.valueOf(role.name()));
+        roleService.assignInitialRole(saved, roleName);
 
         return saved;
     }
@@ -75,12 +73,21 @@ public class AuthService {
         return user;
     }
 
+    public List<String> getRoleNames(User user) {
+        return userRoleRepository.findByUserId(user.getUserId())
+                .stream()
+                .map(ur -> ur.getRole().getCode().name())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public String getPrimaryRole(User user) {
+        return getRoleNames(user).stream().findFirst().orElse("USER");
+    }
+
     /** Generates a JWT with tenantId, userId, and all roles embedded */
     public String generateToken(User user) {
-        Set<String> roleNames = userRoleRepository.findByUserId(user.getId())
-                .stream()
-                .map(ur -> ur.getRole().getRoleName().name())
-                .collect(Collectors.toSet());
+        Set<String> roleNames = getRoleNames(user).stream().collect(Collectors.toSet());
         return jwtConfig.generateToken(user, roleNames);
     }
 }

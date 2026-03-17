@@ -13,7 +13,11 @@ import java.util.UUID;
 public class Exam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "exams_id")
+    private Long examId;
+
+    @Column(name = "exams_public_id", nullable = false, unique = true, updatable = false)
+    private UUID examsPublicId;
 
     @Column(name = "tenant_id")
     private UUID tenantId;
@@ -46,9 +50,53 @@ public class Exam {
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
     private List<Result> results;
 
+    @Column(name = "created_at")
+    private Date createdAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
     public enum ExamType {
         MIDTERM, FINAL, QUIZ, ASSIGNMENT
     }
 
+    public Long getId() {
+        return this.examId;
+    }
+
+    public void setId(Long id) {
+        this.examId = id;
+    }
+
+    @PrePersist
+    protected void onCreatePublicId() {
+        if (examsPublicId == null) {
+            examsPublicId = UUID.randomUUID();
+        }
+        if (createdAt == null) {
+            createdAt = new Date();
+        }
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdateAudit() {
+        updatedAt = new Date();
+    }
 
 }

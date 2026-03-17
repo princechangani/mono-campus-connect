@@ -2,11 +2,15 @@ package com.monocampusconnect.dto;
 
 import lombok.Data;
 
+import java.util.Collections;
+import java.util.List;
+
 @Data
 public class AuthResponse {
     private String token;
     private String email;
     private String role;
+    private List<String> roles;
     private String message;
     private UserInfo user;
 
@@ -17,6 +21,7 @@ public class AuthResponse {
         private String firstName;
         private String lastName;
         private String role;
+        private List<String> roles;
         private String department;
         private String semester;
         private String phoneNumber;
@@ -24,12 +29,13 @@ public class AuthResponse {
         private String facultyId;
         private java.util.UUID tenantId;
 
-        public UserInfo(com.monocampusconnect.model.User u) {
-            this.id               = u.getId();
+        public UserInfo(com.monocampusconnect.model.User u, String primaryRole, List<String> roleNames) {
+            this.id               = u.getUserId();
             this.email            = u.getEmail();
             this.firstName        = u.getFirstName();
             this.lastName         = u.getLastName();
-            this.role             = u.getRole().name();
+            this.role             = primaryRole;
+            this.roles            = roleNames;
             this.department       = u.getDepartment();
             this.semester         = u.getSemester();
             this.phoneNumber      = u.getPhoneNumber();
@@ -41,18 +47,20 @@ public class AuthResponse {
 
     // login response
     public AuthResponse(String token, String email, String role, String message,
-                        com.monocampusconnect.model.User user) {
+                        com.monocampusconnect.model.User user, List<String> roles) {
         this.token   = token;
         this.email   = email;
         this.role    = role;
+        this.roles   = roles;
         this.message = message;
-        this.user    = new UserInfo(user);
+        this.user    = new UserInfo(user, role, roles);
     }
 
     // register response (no token)
     public AuthResponse(String email, String role, String message) {
         this.email   = email;
         this.role    = role;
+        this.roles   = Collections.singletonList(role);
         this.message = message;
     }
 
@@ -61,6 +69,7 @@ public class AuthResponse {
         this.token   = token;
         this.email   = email;
         this.role    = role;
+        this.roles   = Collections.singletonList(role);
         this.message = message;
     }
 }

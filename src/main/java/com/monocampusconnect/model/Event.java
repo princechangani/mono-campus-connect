@@ -16,7 +16,11 @@ import java.util.UUID;
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "events_id")
+    private Long eventId;
+
+    @Column(name = "events_public_id", nullable = false, unique = true, updatable = false)
+    private UUID eventsPublicId;
 
     @Column(name = "tenant_id")
     private UUID tenantId;
@@ -28,6 +32,51 @@ public class Event {
     private byte[] imageContent;
     
     private String postedBy;
+
+    @Column(name = "created_at")
     private Date createdAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_at")
     private Date updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    private Date deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+    public Long getId() {
+        return this.eventId;
+    }
+
+    public void setId(Long id) {
+        this.eventId = id;
+    }
+
+    @PrePersist
+    protected void onCreatePublicId() {
+        if (eventsPublicId == null) {
+            eventsPublicId = UUID.randomUUID();
+        }
+        if (createdAt == null) {
+            createdAt = new Date();
+        }
+        if (updatedAt == null) {
+            updatedAt = new Date();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdateTimestamps() {
+        updatedAt = new Date();
+    }
 }
