@@ -4,6 +4,7 @@ import com.monocampusconnect.config.TenantContextHolder;
 import com.monocampusconnect.dto.AdminDashboardStats;
 import com.monocampusconnect.dto.AdminUserRequest;
 import com.monocampusconnect.exception.ApiException;
+import com.monocampusconnect.model.Role;
 import com.monocampusconnect.model.User;
 import com.monocampusconnect.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ public class AdminService {
     @Autowired private EventRepository eventRepository;
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private RoleService roleService;
 
     private UUID currentTenant() {
         UUID tenantId = TenantContextHolder.getTenantId();
@@ -72,7 +74,12 @@ public class AdminService {
         user.setCreatedAt(new Date());
         user.setUpdatedAt(new Date());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Register role in user_role_mapping for multi-role support
+        roleService.assignInitialRole(savedUser, Role.RoleName.valueOf(role.name()));
+
+        return savedUser;
     }
 
     public List<User> getAllUsers() {

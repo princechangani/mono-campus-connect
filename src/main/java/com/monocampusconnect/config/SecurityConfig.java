@@ -19,6 +19,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     @Lazy
@@ -50,6 +51,7 @@ public class SecurityConfig {
                     // Admin-only management
                     auth.requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN");
                     auth.requestMatchers("/api/departments/**").hasAnyRole("ADMIN", "SUPER_ADMIN");
+                    auth.requestMatchers("/api/roles/**").hasAnyRole("ADMIN", "SUPER_ADMIN");
                     auth.requestMatchers("/api/timetable/**").hasAnyRole("ADMIN", "FACULTY", "STUDENT", "SUPER_ADMIN");
 
                     // Faculty + Admin
@@ -84,7 +86,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "http://localhost:5173",
+                "http://64.227.188.24:5173",
                 "http://localhost:5174",
                 "http://localhost:5175"
         ));

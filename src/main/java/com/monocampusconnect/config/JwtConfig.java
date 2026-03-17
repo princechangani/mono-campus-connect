@@ -10,16 +10,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
 @Component
 public class JwtConfig {
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:86400000}")
     private Long expiration;
 
     // Strong, fixed secret key (base64-encoded, at least 256 bits)
@@ -38,6 +42,19 @@ public class JwtConfig {
 
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> {
+            Object rolesObj = claims.get("roles");
+            if (rolesObj instanceof List<?>) {
+                return (List<String>) rolesObj;
+            }
+            // Fallback: wrap single role claim in a list
+            String singleRole = claims.get("role", String.class);
+            return singleRole != null ? List.of(singleRole) : List.of();
+        });
     }
 
     public Long extractUserId(String token) {
@@ -71,14 +88,20 @@ public class JwtConfig {
 
     // ─── Token Generation ────────────────────────────────────────────────────
 
-    /** Generate token with full claims (tenantId, userId, role) */
-    public String generateToken(User user) {
+    /** Generate token embedding all roles from the user_role_mapping table */
+    public String generateToken(User user, Collection<String> roleNames) {
         Map<String, Object> claims = new HashMap<>();
+        // Legacy single-role claim for backward compatibility
         claims.put("role", user.getRole().name());
         claims.put("userId", user.getId());
         if (user.getTenantId() != null) {
             claims.put("tenantId", user.getTenantId().toString());
         }
+        // Multi-role list claim
+        List<String> roles = roleNames.isEmpty()
+                ? List.of(user.getRole().name())
+                : new ArrayList<>(roleNames);
+        claims.put("roles", roles);
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
@@ -86,6 +109,11 @@ public class JwtConfig {
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    /** Legacy overload — uses only the single legacy role field */
+    public String generateToken(User user) {
+        return generateToken(user, List.of(user.getRole().name()));
     }
 
     /** Legacy overload kept for compatibility — prefer generateToken(User) */

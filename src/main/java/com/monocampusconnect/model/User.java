@@ -41,6 +41,7 @@ public class User {
     private Date createdAt;
     private Date updatedAt;
 
+
     public enum Role {
         SUPER_ADMIN, ADMIN, FACULTY, STUDENT
     }
