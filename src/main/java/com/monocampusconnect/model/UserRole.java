@@ -10,7 +10,7 @@ import java.util.UUID;
 @Entity
 @Table(
     name = "user_roles",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "user_id", "role_id"})
+    uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "user_id", "role_id", "context_type", "context_id"})
 )
 @Data
 @NoArgsConstructor
@@ -18,10 +18,10 @@ public class UserRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_roles_id")
+    @Column(name = "user_role_id")
     private Long userRoleId;
 
-    @Column(name = "user_roles_public_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "user_role_public_id", nullable = false, unique = true, updatable = false)
     private UUID userRolesPublicId;
 
     @Column(name = "tenant_id")
@@ -35,29 +35,31 @@ public class UserRole {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @Column(name = "assigned_by")
-    private Long assignedBy;
+    @Column(name = "context_type")
+    private String contextType;
+
+    @Column(name = "context_id")
+    private Long contextId;
 
     @Column(name = "assigned_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date assignedAt;
 
+    @Column(name = "expires_at")
+    private Date expiresAt;
+
     @Column(name = "created_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Column(name = "created_by")
     private Long createdBy;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
     @Column(name = "updated_by")
     private Long updatedBy;
 
     @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date deletedAt;
 
     @Column(name = "deleted_by")

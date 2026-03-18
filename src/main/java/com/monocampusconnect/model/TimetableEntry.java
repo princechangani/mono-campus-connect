@@ -1,60 +1,75 @@
 package com.monocampusconnect.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Table(name = "timetable_entries")
+@Table(name = "timetable_slots")
 @Data
 public class TimetableEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "timetable_entries_id")
+    @Column(name = "slot_id")
     private Long timetableEntryId;
 
-    @Column(name = "timetable_entries_public_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "slot_public_id", nullable = false, unique = true, updatable = false)
     private UUID timetableEntriesPublicId;
 
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(nullable = false)
-    private String dayOfWeek; // MONDAY, TUESDAY, etc.
+    @Column(name = "course_assignment_id", nullable = false)
+    private Long courseAssignmentId;
 
-    @Column(nullable = false)
-    private String timeSlot; // e.g., "09:00-10:00"
+    @Column(name = "room_id", nullable = false)
+    private Long roomId;
 
-    @Column(nullable = false)
-    private String courseCode;
+    @Column(name = "day_of_week", nullable = false)
+    private String dayOfWeek;
 
-    private String courseName;
+    @Column(name = "start_time", nullable = false)
+    private String startTime;
 
-    private String facultyId;
-    private String facultyName;
+    @Column(name = "end_time", nullable = false)
+    private String endTime;
 
-    private String roomNumber;
+    @Column(name = "slot_type")
+    private String slotType;
 
-    @Column(nullable = false)
-    private String semester;
+    @Column(name = "effective_from", nullable = false)
+    private Date effectiveFrom;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "effective_to")
+    private Date effectiveTo;
+
+    @Column(name = "recurrence")
+    private String recurrence;
+
+    @Column(name = "created_at")
     private Date createdAt;
 
     @Column(name = "created_by")
     private Long createdBy;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_at")
     private Date updatedAt;
 
     @Column(name = "updated_by")
     private Long updatedBy;
 
     @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date deletedAt;
 
     @Column(name = "deleted_by")
@@ -63,10 +78,46 @@ public class TimetableEntry {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    // Legacy compatibility fields for current DTO/controller contract.
+    @Transient
+    private String dayOfWeekText;
+
+    @Transient
+    private String timeSlot;
+
+    @Transient
+    private String courseCode;
+
+    @Transient
+    private String courseName;
+
+    @Transient
+    private String facultyId;
+
+    @Transient
+    private String facultyName;
+
+    @Transient
+    private String roomNumber;
+
+    @Transient
+    private String semester;
+
+    public String getDayOfWeekText() {
+        return dayOfWeekText;
+    }
+
+    public void setDayOfWeekText(String dayOfWeekText) {
+        this.dayOfWeekText = dayOfWeekText;
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = new Date();
-        updatedAt = new Date();
+        Date now = new Date();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
         if (timetableEntriesPublicId == null) {
             timetableEntriesPublicId = UUID.randomUUID();
         }

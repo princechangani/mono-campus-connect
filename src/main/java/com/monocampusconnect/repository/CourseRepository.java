@@ -13,8 +13,8 @@ import java.util.UUID;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
     Course findByCourseCode(String courseCode);
-    List<Course> findByDepartment(String department);
-    List<Course> findBySemester(String semester);
+    List<Course> findByTenantIdAndDepartmentId(UUID tenantId, Long departmentId);
+    List<Course> findByTenantIdOrderByCourseCodeAsc(UUID tenantId);
     List<Course> findByTenantId(UUID tenantId);
     Optional<Course> findByTenantIdAndCourseCode(UUID tenantId, String courseCode);
     long countByTenantId(UUID tenantId);
@@ -22,23 +22,15 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Query("""
         SELECT c FROM Course c
         WHERE c.tenantId = :tenantId
-          AND (:semester    IS NULL OR c.semester    = :semester)
-          AND (:department  IS NULL OR c.department  = :department)
-          AND (:instructor  IS NULL OR c.instructor  = :instructor)
-          AND (:facultyId   IS NULL OR c.facultyId   = :facultyId)
-          AND (:credits     IS NULL OR c.credits     = :credits)
-          AND (:subjectType IS NULL OR c.subjectType = :subjectType)
-          AND (:category    IS NULL OR c.category    = :category)
-        ORDER BY c.semester, c.courseCode
+          AND (:departmentId IS NULL OR c.departmentId = :departmentId)
+          AND (:credits      IS NULL OR c.credits      = :credits)
+          AND (:subjectType  IS NULL OR c.subjectType  = :subjectType)
+        ORDER BY c.courseCode
     """)
     List<Course> filterCourses(
-        @Param("tenantId")    UUID tenantId,
-        @Param("semester")    String semester,
-        @Param("department")  String department,
-        @Param("instructor")  String instructor,
-        @Param("facultyId")   String facultyId,
-        @Param("credits")     Integer credits,
-        @Param("subjectType") Course.SubjectType subjectType,
-        @Param("category")    String category
+        @Param("tenantId")      UUID tenantId,
+        @Param("departmentId")  Long departmentId,
+        @Param("credits")       Integer credits,
+        @Param("subjectType")   Course.SubjectType subjectType
     );
 }

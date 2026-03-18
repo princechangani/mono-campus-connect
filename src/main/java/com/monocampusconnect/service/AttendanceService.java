@@ -33,7 +33,6 @@ public class AttendanceService {
     public Attendance markAttendance(AttendanceRequest request, Long facultyId) {
         UUID tenantId = currentTenant();
 
-        // Check if already marked
         attendanceRepository
                 .findByTenantIdAndStudentIdAndCourseCodeAndSessionDate(
                         tenantId, request.getStudentId(), request.getCourseCode(), request.getSessionDate())
@@ -43,8 +42,15 @@ public class AttendanceService {
                                     + " on this date for course " + request.getCourseCode(), 409);
                 });
 
+        Long sessionId = attendanceRepository
+                .findSessionIdByCourseCodeAndSessionDate(tenantId, request.getCourseCode(), request.getSessionDate())
+                .orElseThrow(() -> new ApiException(
+                        "No attendance session found for course " + request.getCourseCode()
+                                + " on " + request.getSessionDate(), 404));
+
         Attendance attendance = new Attendance();
         attendance.setTenantId(tenantId);
+        attendance.setSessionId(sessionId);
         attendance.setStudentId(request.getStudentId());
         attendance.setCourseCode(request.getCourseCode());
         attendance.setSessionDate(request.getSessionDate());
@@ -108,4 +114,3 @@ public class AttendanceService {
                 Math.round(percentage * 100.0) / 100.0, percentage < THRESHOLD);
     }
 }
-

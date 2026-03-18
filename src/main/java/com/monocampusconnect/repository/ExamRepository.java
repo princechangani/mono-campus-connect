@@ -11,23 +11,15 @@ import java.util.UUID;
 
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
-    Optional<Exam> findByExamCode(String examCode);
-    List<Exam> findByCourseCode(String courseCode);
-    List<Exam> findByType(Exam.ExamType type);
-    List<Exam> findByEnrolledStudentsContains(String studentId);
-    List<Exam> findByEnrolledStudentsContainsAndStartDateAfter(String studentId, Date date);
-    List<Exam> findByEnrolledStudentsContainsAndEndDateBefore(String studentId, Date date);
-    List<Exam> findByStartDateBetween(Date startDate, Date endDate);
-    List<Exam> findByStartDateBefore(Date date);
-    List<Exam> findByEndDateAfter(Date date);
-    List<Exam> findByStartDateAfter(Date date);
-    List<Exam> findByEndDateBefore(Date date);
-    List<Exam> findByCourseCodeAndType(String courseCode, Exam.ExamType type);
-    List<Exam> findByCourseCodeAndStartDateAfter(String courseCode, Date startDate);
-    List<Exam> findByCourseCodeAndEndDateBefore(String courseCode, Date endDate);
-    List<Exam> findByTypeAndStartDateAfter(Exam.ExamType type, Date startDate);
-    List<Exam> findByTypeAndEndDateBefore(Exam.ExamType type, Date endDate);
-    // Tenant-scoped
+    Optional<Exam> findByExamCodeAndTenantId(String examCode, UUID tenantId);
     List<Exam> findByTenantId(UUID tenantId);
+    List<Exam> findByTenantIdAndType(UUID tenantId, Exam.ExamType type);
+    List<Exam> findByTenantIdAndTypeAndStartDateAfter(UUID tenantId, Exam.ExamType type, Date startDate);
+    List<Exam> findByTenantIdAndTypeAndEndDateBefore(UUID tenantId, Exam.ExamType type, Date endDate);
+    List<Exam> findByTenantIdAndStartDateBetween(UUID tenantId, Date startDate, Date endDate);
+    List<Exam> findByTenantIdAndStartDateBefore(UUID tenantId, Date date);
+    List<Exam> findByTenantIdAndEndDateAfter(UUID tenantId, Date date);
+    List<Exam> findByTenantIdAndStartDateAfter(UUID tenantId, Date date);
+    List<Exam> findByTenantIdAndEndDateBefore(UUID tenantId, Date date);
     long countByTenantId(UUID tenantId);
 }

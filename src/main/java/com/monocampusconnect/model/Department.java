@@ -1,6 +1,13 @@
 package com.monocampusconnect.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.util.Date;
@@ -13,38 +20,40 @@ public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "departments_id")
+    @Column(name = "department_id")
     private Long departmentId;
 
-    @Column(name = "departments_public_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "department_public_id", nullable = false, unique = true, updatable = false)
     private UUID departmentsPublicId;
 
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    private String code; // e.g., "CS", "IT", "MECH"
+    @Column(name = "code")
+    private String code;
 
-    private String headFacultyId; // facultyId of the head of department
+    @Column(name = "head_faculty_id")
+    private String headFacultyId;
 
+    @Column(name = "description")
     private String description;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at")
     private Date createdAt;
 
     @Column(name = "created_by")
     private Long createdBy;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_at")
     private Date updatedAt;
 
     @Column(name = "updated_by")
     private Long updatedBy;
 
     @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date deletedAt;
 
     @Column(name = "deleted_by")
@@ -55,8 +64,11 @@ public class Department {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = new Date();
-        updatedAt = new Date();
+        Date now = new Date();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
         if (departmentsPublicId == null) {
             departmentsPublicId = UUID.randomUUID();
         }

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-puimport java.util.UUID;
+import java.util.UUID;
 
 /**
  * ADMIN-only user & college management.

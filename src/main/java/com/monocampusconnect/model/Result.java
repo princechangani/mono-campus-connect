@@ -8,36 +8,52 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "results")
+@Table(name = "marks")
 @Data
 public class Result {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "results_id")
+    @Column(name = "mark_id")
     private Long resultId;
 
-    @Column(name = "results_public_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "mark_public_id", nullable = false, unique = true, updatable = false)
     private UUID resultsPublicId;
 
     @Column(name = "tenant_id")
     private UUID tenantId;
 
+    @Column(name = "exam_id")
+    private Long examId;
+
+    @Column(name = "student_id")
     private Long studentId;
-    private String examCode;
-    private String courseCode;
 
+    @Column(name = "course_id")
+    private Long courseId;
 
-    @ManyToOne
-    @JoinColumn(name = "exam_id")
-    private Exam exam;
-    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL)
-    private List<ResultDetail> resultDetails;
-    private double totalMarks;
+    @Column(name = "marks_obtained")
     private double obtainedMarks;
+
+    @Column(name = "total_marks")
+    private double totalMarks;
+
+    @Column(name = "grade")
     private String grade;
-    private String status; 
+
+    @Column(name = "grade_points")
+    private Double gradePoints;
+
+    @Column(name = "is_absent")
+    private boolean absent;
+
+    @Column(name = "is_withheld")
+    private boolean withheld;
+
+    @Column(name = "remarks")
     private String comments;
-    private Date resultDate;
+
+    @Column(name = "entered_by")
+    private Long enteredBy;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -59,6 +75,25 @@ public class Result {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    // Legacy compatibility fields for existing service contracts.
+    @Transient
+    private String examCode;
+
+    @Transient
+    private String courseCode;
+
+    @Transient
+    private Exam exam;
+
+    @Transient
+    private List<ResultDetail> resultDetails;
+
+    @Transient
+    private String status;
+
+    @Transient
+    private Date resultDate;
 
     public Long getId() {
         return this.resultId;
@@ -83,5 +118,4 @@ public class Result {
     protected void onUpdateAudit() {
         updatedAt = new Date();
     }
-
 }

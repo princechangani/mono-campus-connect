@@ -91,7 +91,7 @@ public class AdminService {
         return user;
     }
 
-return     public User getUserByPublicId(UUID userPublicId) {
+    public User getUserByPublicId(UUID userPublicId) {
         UUID tenantId = currentTenant();
         return userRepository.findByUsersPublicIdAndTenantId(userPublicId, tenantId)
                 .orElseThrow(() -> new ApiException("User not found in this college", 404));
@@ -164,4 +164,3 @@ return     public User getUserByPublicId(UUID userPublicId) {
         return stats;
     }
 }
-

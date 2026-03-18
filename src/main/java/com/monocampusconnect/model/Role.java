@@ -1,6 +1,15 @@
 package com.monocampusconnect.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,40 +24,37 @@ public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "roles_id")
+    @Column(name = "role_id")
     private Long roleId;
 
-    @Column(name = "roles_public_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "role_public_id", nullable = false, unique = true, updatable = false)
     private UUID rolesPublicId;
 
     @Column(name = "tenant_id")
     private UUID tenantId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "code", nullable = false)
+    @Column(name = "name", nullable = false)
     private RoleName code;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "description")
     private String name;
 
     @Column(name = "is_system", nullable = false)
     private boolean isSystem = false;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false)
     private Date createdAt;
 
     @Column(name = "created_by")
     private Long createdBy;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private Date updatedAt;
 
     @Column(name = "updated_by")
     private Long updatedBy;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "deleted_at")
     private Date deletedAt;
 
@@ -66,8 +72,8 @@ public class Role {
     @PrePersist
     public void onCreate() {
         Date now = new Date();
-        this.createdAt = now;
-        this.updatedAt = now;
+        if (createdAt == null) createdAt = now;
+        updatedAt = now;
         if (rolesPublicId == null) {
             rolesPublicId = UUID.randomUUID();
         }

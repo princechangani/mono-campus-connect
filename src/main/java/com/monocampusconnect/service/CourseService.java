@@ -34,11 +34,16 @@ public class CourseService {
     }
 
     public List<Course> getCoursesByDepartment(String department) {
-        return courseRepository.findByDepartment(department);
+        Long departmentId = parseDepartmentId(department);
+        if (departmentId == null) {
+            return List.of();
+        }
+        return courseRepository.findByTenantIdAndDepartmentId(currentTenant(), departmentId);
     }
 
     public List<Course> getCoursesBySemester(String semester) {
-        return courseRepository.findBySemester(semester);
+        // Semester is not a persisted field in Course; keep endpoint backward-compatible.
+        return courseRepository.findByTenantIdOrderByCourseCodeAsc(currentTenant());
     }
 
     public List<Course> getAllCourses() {
@@ -53,19 +58,29 @@ public class CourseService {
             try { type = Course.SubjectType.valueOf(subjectType.toUpperCase()); }
             catch (IllegalArgumentException ignored) {}
         }
+        Long departmentId = parseDepartmentId(department);
+
         return courseRepository.filterCourses(
             currentTenant(),
-            blankToNull(semester),
-            blankToNull(department),
-            blankToNull(instructor),
-            blankToNull(facultyId),
+            departmentId,
             credits,
-            type,
-            blankToNull(category)
+            type
         );
     }
 
     private String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
+
+    private Long parseDepartmentId(String department) {
+        String normalized = blankToNull(department);
+        if (normalized == null) {
+            return null;
+        }
+        try {
+            return Long.valueOf(normalized);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
 
     public Course updateCourse(Long id, Course courseDetails) {
         Course course = courseRepository.findById(id)
