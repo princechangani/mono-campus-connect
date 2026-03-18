@@ -1,4 +1,4 @@
-package com.monocampusconnect.controller.canonical.mongo;
+package com.monocampusconnect.controller.mongo;
 
 import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentRequest;
 import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentResponse;

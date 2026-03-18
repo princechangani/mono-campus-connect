@@ -1,4 +1,4 @@
-package com.monocampusconnect.controller.canonical.postgres;
+package com.monocampusconnect.controller.postgres;
 
 import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalRequest;
 import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalResponse;
