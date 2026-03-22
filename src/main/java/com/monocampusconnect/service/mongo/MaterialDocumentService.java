@@ -1,7 +1,7 @@
 package com.monocampusconnect.service.mongo;
 
-import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentRequest;
-import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentResponse;
+import com.monocampusconnect.dto.mongo.MaterialDocumentRequest;
+import com.monocampusconnect.dto.mongo.MaterialDocumentResponse;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.mongo.MaterialDocument;
 import com.monocampusconnect.repository.mongo.MaterialDocumentRepository;

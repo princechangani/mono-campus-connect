@@ -6,7 +6,11 @@ import com.monocampusconnect.dto.AdminUserRequest;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.Role;
 import com.monocampusconnect.model.User;
-import com.monocampusconnect.repository.*;
+import com.monocampusconnect.repository.UserRepository;
+import com.monocampusconnect.repository.postgres.CourseCanonicalRepository;
+import com.monocampusconnect.repository.postgres.DepartmentCanonicalRepository;
+import com.monocampusconnect.repository.postgres.ExamCanonicalRepository;
+import com.monocampusconnect.repository.postgres.MarkRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,12 +24,10 @@ import java.util.UUID;
 public class AdminService {
 
     @Autowired private UserRepository userRepository;
-    @Autowired private CourseRepository courseRepository;
-    @Autowired private ExamRepository examRepository;
-    @Autowired private ResultRepository resultRepository;
-    @Autowired private MaterialRepository materialRepository;
-    @Autowired private EventRepository eventRepository;
-    @Autowired private DepartmentRepository departmentRepository;
+    @Autowired private CourseCanonicalRepository courseCanonicalRepository;
+    @Autowired private ExamCanonicalRepository examCanonicalRepository;
+    @Autowired private MarkRepository markRepository;
+    @Autowired private DepartmentCanonicalRepository departmentCanonicalRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private RoleService roleService;
 
@@ -155,12 +157,10 @@ public class AdminService {
         AdminDashboardStats stats = new AdminDashboardStats();
         stats.setTotalStudents(roleService.countUsersByRole(Role.RoleName.STUDENT, tenantId));
         stats.setTotalFaculty(roleService.countUsersByRole(Role.RoleName.FACULTY, tenantId));
-        stats.setTotalCourses(courseRepository.countByTenantId(tenantId));
-        stats.setTotalExams(examRepository.countByTenantId(tenantId));
-        stats.setTotalMaterials(materialRepository.countByTenantId(tenantId));
-        stats.setTotalEvents(eventRepository.countByTenantId(tenantId));
-        stats.setTotalDepartments(departmentRepository.countByTenantId(tenantId));
-        stats.setTotalResults(resultRepository.countByTenantId(tenantId));
+        stats.setTotalCourses(courseCanonicalRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId).size());
+        stats.setTotalExams(examCanonicalRepository.count());
+        stats.setTotalDepartments(departmentCanonicalRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId).size());
+        stats.setTotalResults(markRepository.count());
         return stats;
     }
 }

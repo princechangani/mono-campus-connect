@@ -37,6 +37,7 @@ public class AuthService {
     }
 
     public User register(AuthRequest request) {
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ApiException("Email already in use: " + request.getEmail(), 409);
         }
@@ -58,6 +59,9 @@ public class AuthService {
     }
 
     public User login(AuthRequest request) {
+        String newPassword = passwordEncoder.encode("password123");
+
+        System.out.println("password : "+newPassword);
         if (request == null) {
             throw new ApiException("Request body is required", 400);
         }

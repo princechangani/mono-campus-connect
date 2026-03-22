@@ -26,6 +26,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       const res = await api.post("/auth/login", data);
+      console.log("Login response:", res.data);
       const { token, role, user } = res.data;
 
       // clear any stale session first

@@ -1,7 +1,7 @@
 package com.monocampusconnect.service.mongo;
 
-import com.monocampusconnect.dto.canonical.mongo.NotificationDocumentRequest;
-import com.monocampusconnect.dto.canonical.mongo.NotificationDocumentResponse;
+import com.monocampusconnect.dto.mongo.NotificationDocumentRequest;
+import com.monocampusconnect.dto.mongo.NotificationDocumentResponse;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.mongo.NotificationDocument;
 import com.monocampusconnect.repository.mongo.NotificationDocumentRepository;

@@ -1,7 +1,7 @@
 package com.monocampusconnect.service.postgres;
 
-import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalRequest;
-import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalResponse;
+import com.monocampusconnect.dto.postgres.CourseCanonicalRequest;
+import com.monocampusconnect.dto.postgres.CourseCanonicalResponse;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.postgres.CourseCanonical;
 import com.monocampusconnect.repository.postgres.CourseCanonicalRepository;

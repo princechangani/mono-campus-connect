@@ -1,7 +1,7 @@
 package com.monocampusconnect.controller.mongo;
 
-import com.monocampusconnect.dto.canonical.mongo.NotificationDocumentRequest;
-import com.monocampusconnect.dto.canonical.mongo.NotificationDocumentResponse;
+import com.monocampusconnect.dto.mongo.NotificationDocumentRequest;
+import com.monocampusconnect.dto.mongo.NotificationDocumentResponse;
 import com.monocampusconnect.service.mongo.NotificationDocumentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

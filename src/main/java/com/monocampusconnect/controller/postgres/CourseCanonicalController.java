@@ -1,7 +1,7 @@
 package com.monocampusconnect.controller.postgres;
 
-import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalRequest;
-import com.monocampusconnect.dto.canonical.postgres.CourseCanonicalResponse;
+import com.monocampusconnect.dto.postgres.CourseCanonicalRequest;
+import com.monocampusconnect.dto.postgres.CourseCanonicalResponse;
 import com.monocampusconnect.service.postgres.CourseCanonicalService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

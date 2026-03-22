@@ -79,7 +79,7 @@ public class User {
     private String lastLoginIp;
 
     @Column(name = "mfa_enabled")
-    private boolean mfaEnabled;
+    private Boolean mfaEnabled = false;
 
     @Column(name = "mfa_secret")
     private String mfaSecret;

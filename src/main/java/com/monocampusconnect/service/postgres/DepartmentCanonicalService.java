@@ -1,7 +1,7 @@
 package com.monocampusconnect.service.postgres;
 
-import com.monocampusconnect.dto.canonical.postgres.DepartmentCanonicalRequest;
-import com.monocampusconnect.dto.canonical.postgres.DepartmentCanonicalResponse;
+import com.monocampusconnect.dto.postgres.DepartmentCanonicalRequest;
+import com.monocampusconnect.dto.postgres.DepartmentCanonicalResponse;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.postgres.DepartmentCanonical;
 import com.monocampusconnect.repository.postgres.DepartmentCanonicalRepository;

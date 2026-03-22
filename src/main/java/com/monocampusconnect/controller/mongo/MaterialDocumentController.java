@@ -1,7 +1,7 @@
 package com.monocampusconnect.controller.mongo;
 
-import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentRequest;
-import com.monocampusconnect.dto.canonical.mongo.MaterialDocumentResponse;
+import com.monocampusconnect.dto.mongo.MaterialDocumentRequest;
+import com.monocampusconnect.dto.mongo.MaterialDocumentResponse;
 import com.monocampusconnect.service.mongo.MaterialDocumentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
