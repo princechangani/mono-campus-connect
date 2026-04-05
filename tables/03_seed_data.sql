@@ -298,7 +298,7 @@ INSERT INTO fee_invoices (invoice_public_id, tenant_id, student_id, fee_structur
                           invoice_number, issue_date, due_date,
                           subtotal, discount, late_fee, total_amount, status)
 VALUES
-  ('in000000-0000-0000-0000-000000000001', 1, 1, 1,
+  ('b1000000-0000-0000-0000-000000000001', 1, 1, 1,
    'INV-2024-00001', '2024-07-15', '2024-08-31',
    45000.00, 0, 0, 45000.00, 'sent');
 
@@ -306,7 +306,7 @@ INSERT INTO fee_payments (payment_public_id, tenant_id, invoice_id, student_id,
                           amount_paid, payment_date, payment_mode,
                           transaction_reference, receipt_number, status)
 VALUES
-  ('py000000-0000-0000-0000-000000000001', 1, 1, 1,
+  ('b2000000-0000-0000-0000-000000000001', 1, 1, 1,
    45000.00, '2024-08-28', 'upi',
    'UPI123456789', 'REC-2024-00001', 'success');
 
@@ -316,19 +316,19 @@ VALUES
 INSERT INTO holidays (holiday_public_id, tenant_id, title, holiday_date,
                       holiday_type, applies_to)
 VALUES
-  ('ho000000-0000-0000-0000-000000000001', 1, 'Republic Day',    '2025-01-26', 'national', 'all'),
-  ('ho000000-0000-0000-0000-000000000002', 1, 'Independence Day','2025-08-15', 'national', 'all'),
-  ('ho000000-0000-0000-0000-000000000003', 1, 'Diwali',          '2025-10-20', 'state',    'all'),
-  ('ho000000-0000-0000-0000-000000000004', 1, 'College Foundation Day', '2025-09-05', 'college', 'all');
+  ('b3000000-0000-0000-0000-000000000001', 1, 'Republic Day',    '2025-01-26', 'national', 'all'),
+  ('b3000000-0000-0000-0000-000000000002', 1, 'Independence Day','2025-08-15', 'national', 'all'),
+  ('b3000000-0000-0000-0000-000000000003', 1, 'Diwali',          '2025-10-20', 'state',    'all'),
+  ('b3000000-0000-0000-0000-000000000004', 1, 'College Foundation Day', '2025-09-05', 'college', 'all');
 
 INSERT INTO announcements (announcement_public_id, tenant_id, title, content,
                            audience, priority, published_at)
 VALUES
-  ('an000000-0000-0000-0000-000000000001', 1,
+  ('b4000000-0000-0000-0000-000000000001', 1,
    'Mid-semester examination schedule released',
    'The mid-semester examination schedule for Semester 3 has been published. Please check the timetable section.',
    'students', 'high', NOW()),
-  ('an000000-0000-0000-0000-000000000002', 1,
+  ('b4000000-0000-0000-0000-000000000002', 1,
    'Faculty development programme — 10 Sept 2024',
    'All faculty are requested to attend the FDP on 10 Sept 2024 in Seminar Hall C201.',
    'faculty', 'normal', NOW());
@@ -338,8 +338,8 @@ VALUES
 -- ---------------------------------------------------------------------------
 INSERT INTO leave_applications (leave_public_id, tenant_id, applicant_user_id, applicant_type, leave_type, from_date, to_date, reason, status, created_at, is_deleted)
 VALUES
-  ('la000000-0000-0000-0000-000000000001', 1, 4, 'student', 'medical', '2024-09-10', '2024-09-12', 'Viral fever', 'approved', NOW(), FALSE),
-  ('la000000-0000-0000-0000-000000000002', 1, 3, 'faculty', 'personal', '2024-10-05', '2024-10-06', 'Family function', 'pending', NOW(), FALSE);
+  ('b5000000-0000-0000-0000-000000000001', 1, 4, 'student', 'medical', '2024-09-10', '2024-09-12', 'Viral fever', 'approved', NOW(), FALSE),
+  ('b5000000-0000-0000-0000-000000000002', 1, 3, 'faculty', 'personal', '2024-10-05', '2024-10-06', 'Family function', 'pending', NOW(), FALSE);
 
 COMMIT;
 

@@ -38,5 +38,10 @@ public class AttendanceRecordCanonical extends BaseAuditModel {
 
     @Column(name = "remarks")
     private String remarks;
-}
 
+    @Column(name = "course_id")
+    private Long courseId;
+
+    @Column(name = "session_date")
+    private OffsetDateTime sessionDate;
+}

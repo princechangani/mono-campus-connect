@@ -28,6 +28,9 @@ public class Announcement extends BaseAuditModel {
     @Column(name = "content")
     private String content;
 
+    @Column(name = "posted_by")
+    private String postedBy;
+
     @Column(name = "audience")
     private String audience;
 
@@ -46,4 +49,3 @@ public class Announcement extends BaseAuditModel {
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
 }
-

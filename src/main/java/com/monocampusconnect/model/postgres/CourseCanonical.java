@@ -55,4 +55,17 @@ public class CourseCanonical extends BaseAuditModel {
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    // Frontend compatibility fields
+    @Column(name = "semester_number")
+    private Integer semesterNumber;
+
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "subject_type")
+    private String subjectType;
+
+    @Column(name = "instructor_name")
+    private String instructorName;
 }

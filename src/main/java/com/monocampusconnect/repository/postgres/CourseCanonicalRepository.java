@@ -11,6 +11,6 @@ public interface CourseCanonicalRepository extends JpaRepository<CourseCanonical
     List<CourseCanonical> findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID tenantId);
     List<CourseCanonical> findByTenantIdAndDepartmentIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID tenantId, Long departmentId);
     Optional<CourseCanonical> findByCoursePublicIdAndTenantIdAndIsDeletedFalse(UUID coursePublicId, UUID tenantId);
+    Optional<CourseCanonical> findByTenantIdAndCodeAndIsDeletedFalse(UUID tenantId, String code);
     boolean existsByTenantIdAndCodeAndIsDeletedFalse(UUID tenantId, String code);
 }
-

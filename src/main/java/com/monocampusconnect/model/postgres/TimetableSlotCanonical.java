@@ -48,5 +48,28 @@ public class TimetableSlotCanonical extends BaseAuditModel {
 
     @Column(name = "recurrence")
     private String recurrence;
-}
 
+    @Column(name = "course_id")
+    private Long courseId;
+
+    @Column(name = "course_name")
+    private String courseName;
+
+    @Column(name = "faculty_name")
+    private String facultyName;
+
+    @Column(name = "faculty_code")
+    private String facultyCode;
+
+    @Column(name = "room_number")
+    private String roomNumber;
+
+    @Column(name = "semester_number")
+    private String semesterNumber;
+
+    @Column(name = "time_slot")
+    private String timeSlot;
+
+    @Column(name = "day_of_week_label")
+    private String dayOfWeekLabel;
+}

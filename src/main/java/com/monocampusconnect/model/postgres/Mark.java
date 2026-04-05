@@ -53,5 +53,7 @@ public class Mark extends BaseAuditModel {
 
     @Column(name = "entered_by")
     private Long enteredBy;
-}
 
+    @Column(name = "status")
+    private String status;
+}

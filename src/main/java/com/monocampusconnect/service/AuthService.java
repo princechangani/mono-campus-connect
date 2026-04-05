@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +42,8 @@ public class AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ApiException("Email already in use: " + request.getEmail(), 409);
         }
-        Role.RoleName roleName = roleService.parseRoleName(request.getRole());
+        // [SECURITY FIX]: Force role to STUDENT. Prevents IDOR where an attacker sends "SUPER_ADMIN"
+        Role.RoleName roleName = Role.RoleName.STUDENT;
 
         User user = new User();
         user.setEmail(request.getEmail());
@@ -59,9 +61,7 @@ public class AuthService {
     }
 
     public User login(AuthRequest request) {
-        String newPassword = passwordEncoder.encode("password123");
 
-        System.out.println("password : "+newPassword);
         if (request == null) {
             throw new ApiException("Request body is required", 400);
         }

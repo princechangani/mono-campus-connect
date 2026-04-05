@@ -52,6 +52,16 @@ const navByRole: Record<string, NavItem[]> = {
     { label: "Notifications", href: "/notifications",       icon: <Bell className="w-4 h-4" /> },
     { label: "Profile",       href: "/profile",             icon: <Settings className="w-4 h-4" /> },
   ],
+  HOD: [
+    { label: "Dashboard",     href: "/hod/dashboard",       icon: <LayoutDashboard className="w-4 h-4" /> },
+    { label: "Students",      href: "/hod/students",        icon: <GraduationCap className="w-4 h-4" /> },
+    { label: "Faculty",       href: "/hod/faculty",         icon: <Users className="w-4 h-4" /> },
+    { label: "Subjects",      href: "/hod/courses",         icon: <BookOpen className="w-4 h-4" /> },
+    { label: "Timetable",     href: "/hod/timetable",       icon: <Clock className="w-4 h-4" /> },
+    { label: "Events",        href: "/hod/events",          icon: <Calendar className="w-4 h-4" /> },
+    { label: "Notifications", href: "/notifications",       icon: <Bell className="w-4 h-4" /> },
+    { label: "Profile",       href: "/profile",             icon: <Settings className="w-4 h-4" /> },
+  ],
   SUPER_ADMIN: [
     { label: "Dashboard",   href: "/super-admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
     { label: "Colleges",    href: "/super-admin/tenants",   icon: <Building2 className="w-4 h-4" /> },

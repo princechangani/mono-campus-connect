@@ -5,6 +5,7 @@ import { getToken, getRole } from "@/lib/auth";
 import Sidebar from "./Sidebar";
 import { Bell, Search } from "lucide-react";
 import api from "@/lib/api";
+import { useQuery } from "react-query";
 
 interface Props {
   children: React.ReactNode;
@@ -14,8 +15,8 @@ interface Props {
 export default function DashboardLayout({ children, title }: Props) {
   const router   = useRouter();
   const [role, setRole]         = useState<string | null>(null);
-  const [unread, setUnread]     = useState(0);
   const [checked, setChecked]   = useState(false);
+  const unreadCount = 0;
 
   useEffect(() => {
     const token = getToken();
@@ -26,10 +27,6 @@ export default function DashboardLayout({ children, title }: Props) {
     }
     setRole(r);
     setChecked(true);
-    // fetch unread notification count
-    api.get("/notifications/unread/count")
-       .then((res) => setUnread(res.data.count ?? 0))
-       .catch(() => {});
   }, [router]);
 
   if (!checked || !role) {
@@ -58,7 +55,7 @@ export default function DashboardLayout({ children, title }: Props) {
               className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
             >
               <Bell className="w-5 h-5" />
-              {unread > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
@@ -73,4 +70,3 @@ export default function DashboardLayout({ children, title }: Props) {
     </div>
   );
 }
-

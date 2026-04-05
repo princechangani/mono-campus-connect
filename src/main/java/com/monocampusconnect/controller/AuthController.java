@@ -7,6 +7,8 @@ import com.monocampusconnect.model.User;
 import com.monocampusconnect.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +25,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+
+
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ApiException("Email is required", 400);
         }

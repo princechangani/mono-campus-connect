@@ -17,10 +17,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Configuration
 @EnableWebSecurity
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://64.227.188.24:5173,http://localhost:5174}")
+    private String[] allowedOrigins;
 
     @Lazy
     @Autowired
@@ -59,7 +64,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/materials/**").hasAnyRole("FACULTY", "ADMIN", "STUDENT", "SUPER_ADMIN");
                     auth.requestMatchers("/api/results/**").hasAnyRole("FACULTY", "ADMIN", "STUDENT", "SUPER_ADMIN");
                     auth.requestMatchers("/api/attendance/**").hasAnyRole("FACULTY", "ADMIN", "STUDENT", "SUPER_ADMIN");
-
+                    auth.requestMatchers("/api/students/**").hasAnyRole("FACULTY", "ADMIN", "SUPER_ADMIN");
                     // Notifications — all authenticated
                     auth.requestMatchers("/api/notifications/**").authenticated();
 
@@ -84,12 +89,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://64.227.188.24:5173",
-                "http://localhost:5174",
-                "http://localhost:5175"
-        ));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);

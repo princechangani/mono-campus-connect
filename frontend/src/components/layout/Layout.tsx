@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, LogOut } from 'lucide-react';
 import { logout } from '@/lib/auth';
 
@@ -19,6 +19,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, navItems = [], title }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
@@ -42,7 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, navItems = [], title }
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                router.pathname === item.href
+                pathname === item.href
                   ? 'bg-indigo-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}

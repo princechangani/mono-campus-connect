@@ -27,7 +27,7 @@ export default function AdminFacultyPage() {
   const onSubmit = async (data: any) => {
     try {
       if (editing) {
-        await api.put(`/admin/users/${editing.id}`, { ...data, role: "FACULTY" });
+        await api.put(`/admin/users/id/${editing.id}`, { ...data, role: "FACULTY" });
         toast.success("Faculty updated");
       } else {
         await api.post("/admin/users", { ...data, role: "FACULTY" });
@@ -38,13 +38,13 @@ export default function AdminFacultyPage() {
   };
 
   const toggleEnabled = (u: any) => {
-    const ep = u.enabled ? `/admin/users/${u.id}/disable` : `/admin/users/${u.id}/enable`;
+    const ep = u.enabled ? `/admin/users/id/${u.id}/disable` : `/admin/users/id/${u.id}/enable`;
     api.put(ep).then(() => { toast.success(`User ${u.enabled ? "disabled" : "enabled"}`); load(); }).catch(() => {});
   };
 
   const deleteUser = (id: number) => {
     if (!confirm("Delete this faculty member?")) return;
-    api.delete(`/admin/users/${id}`).then(() => { toast.success("Deleted"); load(); }).catch(() => {});
+    api.delete(`/admin/users/id/${id}`).then(() => { toast.success("Deleted"); load(); }).catch(() => {});
   };
 
   const filtered = faculty.filter(f =>
@@ -147,4 +147,3 @@ export default function AdminFacultyPage() {
     </DashboardLayout>
   );
 }
-

@@ -27,7 +27,7 @@ export default function AdminStudentsPage() {
   const onSubmit = async (data: any) => {
     try {
       if (editing) {
-        await api.put(`/admin/users/${editing.id}`, { ...data, role: "STUDENT" });
+        await api.put(`/admin/users/id/${editing.id}`, { ...data, role: "STUDENT" });
         toast.success("Student updated");
       } else {
         await api.post("/admin/users", { ...data, role: "STUDENT" });
@@ -39,13 +39,13 @@ export default function AdminStudentsPage() {
   };
 
   const toggleEnabled = (u: any) => {
-    const ep = u.enabled ? `/admin/users/${u.id}/disable` : `/admin/users/${u.id}/enable`;
+    const ep = u.enabled ? `/admin/users/id/${u.id}/disable` : `/admin/users/id/${u.id}/enable`;
     api.put(ep).then(() => { toast.success(`User ${u.enabled ? "disabled" : "enabled"}`); load(); }).catch(() => {});
   };
 
   const deleteUser = (id: number) => {
     if (!confirm("Delete this student?")) return;
-    api.delete(`/admin/users/${id}`).then(() => { toast.success("Deleted"); load(); }).catch(() => {});
+    api.delete(`/admin/users/id/${id}`).then(() => { toast.success("Deleted"); load(); }).catch(() => {});
   };
 
   const filtered = students.filter(s =>
@@ -152,4 +152,3 @@ export default function AdminStudentsPage() {
     </DashboardLayout>
   );
 }
-

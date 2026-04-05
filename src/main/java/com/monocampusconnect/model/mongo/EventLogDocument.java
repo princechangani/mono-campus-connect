@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Map;
 
 @Data
@@ -46,5 +46,5 @@ public class EventLogDocument {
 
     @Indexed(expireAfter = "90d") // 90 days TTL
     @Field("created_at")
-    private Date createdAt;
+    private Instant createdAt;
 }

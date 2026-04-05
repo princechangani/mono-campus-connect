@@ -28,11 +28,21 @@ public class ExamCanonical extends BaseAuditModel {
     @Column(name = "batch_id")
     private Long batchId;
 
+    @Column(name = "course_id")
+    private Long courseId;
+
+    // Frontend compatibility fields
+    @Column(name = "exam_code")
+    private String examCode;
+
     @Column(name = "name")
     private String name;
 
     @Column(name = "exam_type")
     private String examType;
+
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "semester_number")
     private Integer semesterNumber;
@@ -48,5 +58,7 @@ public class ExamCanonical extends BaseAuditModel {
 
     @Column(name = "passing_marks")
     private BigDecimal passingMarks;
-}
 
+    @Column(name = "enrolled_student_ids", columnDefinition = "text")
+    private String enrolledStudentIds;
+}

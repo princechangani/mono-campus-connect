@@ -42,6 +42,7 @@ export default function LoginPage() {
       switch (role) {
         case "SUPER_ADMIN": router.push("/super-admin/dashboard"); break;
         case "ADMIN":       router.push("/admin/dashboard");       break;
+        case "HOD":         router.push("/hod/dashboard");         break;
         case "FACULTY":     router.push("/faculty/dashboard");     break;
         default:            router.push("/student/dashboard");
       }

@@ -54,7 +54,7 @@ api.interceptors.response.use(
       console.log("Message :", err?.message);
       console.groupEnd();
     }
-    if (err.response?.status === 401) logout();
+    if (err.response?.status === 401 && !err.config?.url?.includes("/auth/login")) logout();
     return Promise.reject(err);
   }
 );

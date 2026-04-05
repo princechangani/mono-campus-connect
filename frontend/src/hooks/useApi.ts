@@ -20,8 +20,8 @@ export const useAcademicYear = (id: number) => {
 
 export const useCreateAcademicYear = () => {
   const queryClient = useQueryClient();
-  return useMutation(
-    (data) => services.academicYearService.create(data).then((res) => res.data),
+  return useMutation<any, any, any>(
+    (data: any) => services.academicYearService.create(data).then((res) => res.data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("academicYears");
@@ -91,8 +91,8 @@ export const useProgramsByDepartment = (departmentId: number) => {
 
 export const useCreateProgram = () => {
   const queryClient = useQueryClient();
-  return useMutation(
-    (data) => services.programService.create(data).then((res) => res.data),
+  return useMutation<any, any, any>(
+    (data: any) => services.programService.create(data).then((res) => res.data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("programs");
@@ -162,8 +162,8 @@ export const useBatchesByProgram = (programId: number) => {
 
 export const useCreateBatch = () => {
   const queryClient = useQueryClient();
-  return useMutation(
-    (data) => services.batchService.create(data).then((res) => res.data),
+  return useMutation<any, any, any>(
+    (data: any) => services.batchService.create(data).then((res) => res.data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("batches");
@@ -178,7 +178,7 @@ export const useCreateBatch = () => {
 
 export const useUpdateBatch = () => {
   const queryClient = useQueryClient();
-  return useMutation(
+  return useMutation<any, any, any>(
     ({ id, data }: { id: number; data: any }) =>
       services.batchService.update(id, data).then((res) => res.data),
     {
@@ -195,7 +195,7 @@ export const useUpdateBatch = () => {
 
 export const useDeleteBatch = () => {
   const queryClient = useQueryClient();
-  return useMutation(
+  return useMutation<any, any, any>(
     (id: number) => services.batchService.delete(id),
     {
       onSuccess: () => {
@@ -233,8 +233,8 @@ export const useStudentsByBatch = (batchId: number) => {
 
 export const useCreateStudent = () => {
   const queryClient = useQueryClient();
-  return useMutation(
-    (data) => services.studentService.create(data).then((res) => res.data),
+  return useMutation<any, any, any>(
+    (data: any) => services.studentService.create(data).then((res) => res.data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("students");
@@ -271,8 +271,8 @@ export const useFacultyByDepartment = (departmentId: number) => {
 
 export const useCreateFaculty = () => {
   const queryClient = useQueryClient();
-  return useMutation(
-    (data) => services.facultyService.create(data).then((res) => res.data),
+  return useMutation<any, any, any>(
+    (data: any) => services.facultyService.create(data).then((res) => res.data),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("faculty");

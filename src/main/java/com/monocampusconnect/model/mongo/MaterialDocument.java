@@ -44,6 +44,9 @@ public class MaterialDocument {
     @Field("semester_number")
     private Integer semesterNumber;
 
+    @Field("material_code")
+    private String materialCode;
+
     private String title;
     private String description;
 
@@ -73,6 +76,12 @@ public class MaterialDocument {
 
     @Field("download_count")
     private long downloadCount;
+
+    @Field("uploaded_by")
+    private String uploadedBy;
+
+    @Field("uploaded_date")
+    private Date uploadedDate;
 
     @Field("created_at")
     private Date createdAt;
