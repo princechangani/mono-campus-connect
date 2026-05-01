@@ -1,0 +1,308 @@
+
+<div style="padding:8px 0;font-family:var(--font-mono);font-size:12px;line-height:1.75;color:var(--color-text-primary)">
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+  <span style="background:#EEEDFE;color:#3C3489;padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--font-sans)">S — single responsibility</span>
+  <span style="background:#E1F5EE;color:#085041;padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--font-sans)">O — open/closed</span>
+  <span style="background:#FAEEDA;color:#633806;padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--font-sans)">L — Liskov substitution</span>
+  <span style="background:#FAECE7;color:#712B13;padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--font-sans)">I — interface segregation</span>
+  <span style="background:#E6F1FB;color:#0C447C;padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--font-sans)">D — dependency inversion</span>
+</div>
+
+<div style="font-family:var(--font-mono);font-size:11.5px;line-height:2">
+
+<div style="color:var(--color-text-primary);font-weight:500">campusconnect/</div>
+
+<div style="margin-left:8px">
+  <div style="color:#3C3489">├── cmd/                         <span style="color:var(--color-text-tertiary);font-size:10px">// entry points only — wires everything together</span></div>
+  <div style="margin-left:16px">
+    <div>├── api/</div>
+    <div style="margin-left:16px"><div>│   └── main.go              <span style="color:var(--color-text-tertiary);font-size:10px">// HTTP server bootstrap</span></div></div>
+    <div>├── worker/</div>
+    <div style="margin-left:16px"><div>│   └── main.go              <span style="color:var(--color-text-tertiary);font-size:10px">// background job runner</span></div></div>
+    <div>└── migrate/</div>
+    <div style="margin-left:16px"><div>    └── main.go              <span style="color:var(--color-text-tertiary);font-size:10px">// DB migration CLI</span></div></div>
+  </div>
+
+  <div style="color:#3C3489;margin-top:6px">├── internal/                    <span style="color:var(--color-text-tertiary);font-size:10px">// private application code</span></div>
+  <div style="margin-left:16px">
+
+    <div style="color:#085041">├── domain/                      <span style="color:var(--color-text-tertiary);font-size:10px">// pure business entities — zero dependencies [S, O]</span></div>
+    <div style="margin-left:16px">
+      <div>├── tenant/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── entity.go            <span style="color:var(--color-text-tertiary);font-size:10px">// Tenant struct, value objects</span></div>
+        <div>│   ├── errors.go            <span style="color:var(--color-text-tertiary);font-size:10px">// domain-specific errors</span></div>
+        <div>│   └── events.go            <span style="color:var(--color-text-tertiary);font-size:10px">// TenantCreated, TenantSuspended …</span></div>
+      </div>
+      <div>├── student/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── entity.go</div>
+        <div>│   ├── errors.go</div>
+        <div>│   └── events.go</div>
+      </div>
+      <div>├── faculty/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── entity.go</div>
+        <div>│   ├── errors.go</div>
+        <div>│   └── events.go</div>
+      </div>
+      <div>├── course/</div>
+      <div style="margin-left:16px"><div>│   ├── entity.go</div><div>│   └── errors.go</div></div>
+      <div>├── attendance/</div>
+      <div style="margin-left:16px"><div>│   ├── entity.go</div><div>│   └── errors.go</div></div>
+      <div>├── exam/</div>
+      <div style="margin-left:16px"><div>│   ├── entity.go</div><div>│   └── errors.go</div></div>
+      <div>└── finance/</div>
+      <div style="margin-left:16px"><div>    ├── entity.go</div><div>    └── errors.go</div></div>
+    </div>
+
+    <div style="color:#0C447C;margin-top:6px">├── port/                        <span style="color:var(--color-text-tertiary);font-size:10px">// interfaces only — no implementations [I, D]</span></div>
+    <div style="margin-left:16px">
+      <div>├── repository/              <span style="color:var(--color-text-tertiary);font-size:10px">// storage contracts</span></div>
+      <div style="margin-left:16px">
+        <div>│   ├── tenant.go            <span style="color:var(--color-text-tertiary);font-size:10px">// TenantRepository interface</span></div>
+        <div>│   ├── student.go           <span style="color:var(--color-text-tertiary);font-size:10px">// StudentRepository interface</span></div>
+        <div>│   ├── faculty.go</div>
+        <div>│   ├── course.go</div>
+        <div>│   ├── attendance.go</div>
+        <div>│   ├── exam.go</div>
+        <div>│   └── finance.go</div>
+      </div>
+      <div>├── service/                 <span style="color:var(--color-text-tertiary);font-size:10px">// external service contracts</span></div>
+      <div style="margin-left:16px">
+        <div>│   ├── mailer.go            <span style="color:var(--color-text-tertiary);font-size:10px">// Mailer interface</span></div>
+        <div>│   ├── storage.go           <span style="color:var(--color-text-tertiary);font-size:10px">// FileStorage interface</span></div>
+        <div>│   ├── cache.go             <span style="color:var(--color-text-tertiary);font-size:10px">// Cache interface</span></div>
+        <div>│   ├── sms.go               <span style="color:var(--color-text-tertiary);font-size:10px">// SMSSender interface</span></div>
+        <div>│   └── payment.go           <span style="color:var(--color-text-tertiary);font-size:10px">// PaymentGateway interface</span></div>
+      </div>
+      <div>└── event/</div>
+      <div style="margin-left:16px">
+        <div>    ├── publisher.go         <span style="color:var(--color-text-tertiary);font-size:10px">// EventPublisher interface</span></div>
+        <div>    └── subscriber.go        <span style="color:var(--color-text-tertiary);font-size:10px">// EventSubscriber interface</span></div>
+      </div>
+    </div>
+
+    <div style="color:#085041;margin-top:6px">├── usecase/                     <span style="color:var(--color-text-tertiary);font-size:10px">// business logic orchestration [S, O]</span></div>
+    <div style="margin-left:16px">
+      <div>├── tenant/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── create_tenant.go     <span style="color:var(--color-text-tertiary);font-size:10px">// one use-case per file</span></div>
+        <div>│   ├── suspend_tenant.go</div>
+        <div>│   └── update_settings.go</div>
+      </div>
+      <div>├── student/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── enroll_student.go</div>
+        <div>│   ├── update_profile.go</div>
+        <div>│   └── get_student.go</div>
+      </div>
+      <div>├── faculty/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── hire_faculty.go</div>
+        <div>│   ├── assign_course.go</div>
+        <div>│   └── update_profile.go</div>
+      </div>
+      <div>├── attendance/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── mark_attendance.go</div>
+        <div>│   └── get_report.go</div>
+      </div>
+      <div>├── exam/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── schedule_exam.go</div>
+        <div>│   └── enter_marks.go</div>
+      </div>
+      <div>└── finance/</div>
+      <div style="margin-left:16px">
+        <div>    ├── generate_invoice.go</div>
+        <div>    └── record_payment.go</div>
+      </div>
+    </div>
+
+    <div style="color:#712B13;margin-top:6px">├── adapter/                     <span style="color:var(--color-text-tertiary);font-size:10px">// concrete implementations of port interfaces [L, D]</span></div>
+    <div style="margin-left:16px">
+      <div>├── repository/              <span style="color:var(--color-text-tertiary);font-size:10px">// implements port/repository/*</span></div>
+      <div style="margin-left:16px">
+        <div>│   ├── postgres/</div>
+        <div style="margin-left:16px">
+          <div>│   │   ├── tenant.go        <span style="color:var(--color-text-tertiary);font-size:10px">// PostgresTenantRepository</span></div>
+          <div>│   │   ├── student.go</div>
+          <div>│   │   ├── faculty.go</div>
+          <div>│   │   ├── course.go</div>
+          <div>│   │   ├── attendance.go</div>
+          <div>│   │   ├── exam.go</div>
+          <div>│   │   └── finance.go</div>
+        </div>
+        <div>│   └── mongo/</div>
+        <div style="margin-left:16px">
+          <div>│       ├── study_material.go</div>
+          <div>│       ├── notification.go</div>
+          <div>│       └── audit_log.go</div>
+        </div>
+      </div>
+      <div>├── cache/</div>
+      <div style="margin-left:16px">
+        <div>│   └── redis/</div>
+        <div style="margin-left:16px"><div>│       └── cache.go         <span style="color:var(--color-text-tertiary);font-size:10px">// RedisCache implements port/service.Cache</span></div></div>
+      </div>
+      <div>├── mailer/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── smtp.go              <span style="color:var(--color-text-tertiary);font-size:10px">// SMTPMailer</span></div>
+        <div>│   └── sendgrid.go          <span style="color:var(--color-text-tertiary);font-size:10px">// SendGridMailer — swap without changing usecase</span></div>
+      </div>
+      <div>├── storage/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── s3.go                <span style="color:var(--color-text-tertiary);font-size:10px">// S3Storage</span></div>
+        <div>│   └── gcs.go               <span style="color:var(--color-text-tertiary);font-size:10px">// GCSStorage</span></div>
+      </div>
+      <div>├── sms/</div>
+      <div style="margin-left:16px">
+        <div>│   └── twilio.go</div>
+      </div>
+      <div>└── payment/</div>
+      <div style="margin-left:16px">
+        <div>    ├── razorpay.go</div>
+        <div>    └── stripe.go</div>
+      </div>
+    </div>
+
+    <div style="color:#3C3489;margin-top:6px">├── transport/                   <span style="color:var(--color-text-tertiary);font-size:10px">// delivery layer — HTTP, gRPC, websocket [S]</span></div>
+    <div style="margin-left:16px">
+      <div>├── http/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── handler/</div>
+        <div style="margin-left:16px">
+          <div>│   │   ├── tenant.go        <span style="color:var(--color-text-tertiary);font-size:10px">// TenantHandler — calls usecase only</span></div>
+          <div>│   │   ├── student.go</div>
+          <div>│   │   ├── faculty.go</div>
+          <div>│   │   ├── attendance.go</div>
+          <div>│   │   ├── exam.go</div>
+          <div>│   │   └── finance.go</div>
+        </div>
+        <div>│   ├── middleware/</div>
+        <div style="margin-left:16px">
+          <div>│   │   ├── auth.go          <span style="color:var(--color-text-tertiary);font-size:10px">// JWT validation</span></div>
+          <div>│   │   ├── tenant.go        <span style="color:var(--color-text-tertiary);font-size:10px">// tenant resolver from slug/host</span></div>
+          <div>│   │   ├── rbac.go          <span style="color:var(--color-text-tertiary);font-size:10px">// permission check</span></div>
+          <div>│   │   ├── ratelimit.go</div>
+          <div>│   │   └── logger.go</div>
+        </div>
+        <div>│   ├── request/</div>
+        <div style="margin-left:16px">
+          <div>│   │   ├── student.go       <span style="color:var(--color-text-tertiary);font-size:10px">// CreateStudentRequest, validation</span></div>
+          <div>│   │   └── ...              </div>
+        </div>
+        <div>│   ├── response/</div>
+        <div style="margin-left:16px">
+          <div>│   │   ├── student.go       <span style="color:var(--color-text-tertiary);font-size:10px">// StudentResponse DTO</span></div>
+          <div>│   │   └── error.go         <span style="color:var(--color-text-tertiary);font-size:10px">// ErrorResponse shape</span></div>
+        </div>
+        <div>│   └── router.go            <span style="color:var(--color-text-tertiary);font-size:10px">// route registration</span></div>
+      </div>
+      <div>└── worker/</div>
+      <div style="margin-left:16px">
+        <div>    ├── attendance_reminder.go</div>
+        <div>    ├── invoice_generator.go</div>
+        <div>    └── email_dispatcher.go</div>
+      </div>
+    </div>
+
+    <div style="color:#712B13;margin-top:6px">├── infra/                       <span style="color:var(--color-text-tertiary);font-size:10px">// low-level wiring and config</span></div>
+    <div style="margin-left:16px">
+      <div>├── db/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── postgres.go          <span style="color:var(--color-text-tertiary);font-size:10px">// connection pool setup</span></div>
+        <div>│   └── mongo.go</div>
+      </div>
+      <div>├── config/</div>
+      <div style="margin-left:16px">
+        <div>│   └── config.go            <span style="color:var(--color-text-tertiary);font-size:10px">// env-based config struct</span></div>
+      </div>
+      <div>├── logger/</div>
+      <div style="margin-left:16px">
+        <div>│   └── logger.go            <span style="color:var(--color-text-tertiary);font-size:10px">// zerolog / slog wrapper</span></div>
+      </div>
+      <div>├── telemetry/</div>
+      <div style="margin-left:16px">
+        <div>│   ├── tracer.go            <span style="color:var(--color-text-tertiary);font-size:10px">// OpenTelemetry setup</span></div>
+        <div>│   └── metrics.go           <span style="color:var(--color-text-tertiary);font-size:10px">// Prometheus metrics</span></div>
+      </div>
+      <div>└── container/</div>
+      <div style="margin-left:16px">
+        <div>    └── container.go         <span style="color:var(--color-text-tertiary);font-size:10px">// DI wiring — constructs all adapters + usecases</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="color:var(--color-text-secondary);margin-top:6px">├── pkg/                         <span style="color:var(--color-text-tertiary);font-size:10px">// reusable, import-safe public packages</span></div>
+  <div style="margin-left:16px">
+    <div>├── apperror/                <span style="color:var(--color-text-tertiary);font-size:10px">// typed error catalogue</span></div>
+    <div>├── pagination/              <span style="color:var(--color-text-tertiary);font-size:10px">// cursor/offset pagination helpers</span></div>
+    <div>├── validator/               <span style="color:var(--color-text-tertiary);font-size:10px">// reusable validation funcs</span></div>
+    <div>├── crypto/                  <span style="color:var(--color-text-tertiary);font-size:10px">// hashing, JWT signing</span></div>
+    <div>├── timeutil/                <span style="color:var(--color-text-tertiary);font-size:10px">// timezone-aware helpers</span></div>
+    <div>└── uuid/                    <span style="color:var(--color-text-tertiary);font-size:10px">// UUID generation wrapper</span></div>
+  </div>
+
+  <div style="color:var(--color-text-secondary);margin-top:6px">├── migration/</div>
+  <div style="margin-left:16px">
+    <div>├── postgres/</div>
+    <div style="margin-left:16px">
+      <div>│   ├── 001_init_tenants.up.sql</div>
+      <div>│   ├── 001_init_tenants.down.sql</div>
+      <div>│   └── ...</div>
+    </div>
+    <div>└── mongo/</div>
+    <div style="margin-left:16px">
+      <div>    └── 001_init_collections.js</div>
+    </div>
+  </div>
+
+  <div style="color:var(--color-text-secondary);margin-top:6px">├── test/</div>
+  <div style="margin-left:16px">
+    <div>├── integration/             <span style="color:var(--color-text-tertiary);font-size:10px">// tests against real DB</span></div>
+    <div>├── e2e/                     <span style="color:var(--color-text-tertiary);font-size:10px">// full HTTP flow tests</span></div>
+    <div>└── mock/                    <span style="color:var(--color-text-tertiary);font-size:10px">// generated mocks (mockery / gomock)</span></div>
+  </div>
+
+  <div style="color:var(--color-text-secondary);margin-top:6px">├── docs/                        <span style="color:var(--color-text-tertiary);font-size:10px">// OpenAPI / Swagger specs</span></div>
+  <div>├── Makefile</div>
+  <div>├── go.mod</div>
+  <div>├── go.sum</div>
+  <div>└── docker-compose.yml</div>
+</div>
+
+</div>
+
+<div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:var(--font-sans);font-size:11.5px">
+
+  <div style="border-left:3px solid #534AB7;padding:10px 14px;border-radius:0 8px 8px 0;background:var(--color-background-secondary)">
+    <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Dependency rule</div>
+    <div style="color:var(--color-text-secondary)">domain → port → usecase → adapter/transport</div>
+    <div style="color:var(--color-text-tertiary);margin-top:4px">Inner layers never import outer layers. domain has zero external imports.</div>
+  </div>
+
+  <div style="border-left:3px solid #0F6E56;padding:10px 14px;border-radius:0 8px 8px 0;background:var(--color-background-secondary)">
+    <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">One file per use-case</div>
+    <div style="color:var(--color-text-secondary)">enroll_student.go does one thing. Adding a new behaviour = add a new file, not edit an existing one.</div>
+    <div style="color:var(--color-text-tertiary);margin-top:4px">Open/closed in practice.</div>
+  </div>
+
+  <div style="border-left:3px solid #BA7517;padding:10px 14px;border-radius:0 8px 8px 0;background:var(--color-background-secondary)">
+    <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Adapters are swappable</div>
+    <div style="color:var(--color-text-secondary)">smtp.go and sendgrid.go both implement Mailer. Swap in container.go — zero usecase changes.</div>
+    <div style="color:var(--color-text-tertiary);margin-top:4px">Liskov + Dependency Inversion.</div>
+  </div>
+
+  <div style="border-left:3px solid #185FA5;padding:10px 14px;border-radius:0 8px 8px 0;background:var(--color-background-secondary)">
+    <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Narrow interfaces</div>
+    <div style="color:var(--color-text-secondary)">port/repository/student.go is its own file. A use-case only receives the interfaces it actually calls.</div>
+    <div style="color:var(--color-text-tertiary);margin-top:4px">Interface segregation in practice.</div>
+  </div>
+
+</div>
+
+</div>

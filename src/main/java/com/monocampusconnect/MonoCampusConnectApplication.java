@@ -9,5 +9,4 @@ public class MonoCampusConnectApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MonoCampusConnectApplication.class, args);
 	}
-
 }

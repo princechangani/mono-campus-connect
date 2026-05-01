@@ -3,18 +3,22 @@ package com.monocampusconnect.service;
 import com.monocampusconnect.dto.ProfileRequest;
 import com.monocampusconnect.exception.ApiException;
 import com.monocampusconnect.model.User;
+import com.monocampusconnect.model.UserRole;
+import com.monocampusconnect.repository.UserRepository;
+import com.monocampusconnect.repository.UserRoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
-import com.monocampusconnect.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProfileService implements UserDetailsService {
@@ -23,16 +27,30 @@ public class ProfileService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Autowired
+    private UserRoleRepository userRoleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        List<UserRole> userRoles = userRoleRepository.findByUserId(user.getUserId());
+        List<SimpleGrantedAuthority> authorities;
+        if (!userRoles.isEmpty()) {
+            authorities = userRoles.stream()
+                    .map(ur -> new SimpleGrantedAuthority("ROLE_" + ur.getRole().getCode().name()))
+                    .collect(Collectors.toList());
+        } else {
+            authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+                authorities);
     }
 
     public User getProfile(Long userId) {

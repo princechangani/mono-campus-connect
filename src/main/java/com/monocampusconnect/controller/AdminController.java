@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * ADMIN-only user & college management.
@@ -42,10 +43,25 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUsersByRole(role));
     }
 
-    /** GET /api/admin/users/{id} */
-    @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.getUserById(id));
+    /** GET /api/admin/students — alias for STUDENT role */
+    @GetMapping("/students")
+    public ResponseEntity<List<User>> getStudents() {
+        return ResponseEntity.ok(adminService.getUsersByRole("STUDENT"));
+    }
+
+    /** GET /api/admin/users/{publicId} */
+    @GetMapping("/users/{publicId}")
+    public ResponseEntity<User> getUserById(@PathVariable UUID publicId) {
+        return ResponseEntity.ok(adminService.getUserByPublicId(publicId));
+    }
+
+    /** GET /api/admin/users/id/{id} — numeric id lookup (frontend compatibility) */
+    @GetMapping("/users/id/{id}")
+    public ResponseEntity<User> getUserByNumericId(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getAllUsers().stream()
+                .filter(u -> id.equals(u.getId()))
+                .findFirst()
+                .orElseThrow(() -> new com.monocampusconnect.exception.ApiException("User not found", 404)));
     }
 
     /** POST /api/admin/users — create a new faculty or student */
@@ -54,32 +70,75 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminService.createUser(request));
     }
 
-    /** PUT /api/admin/users/{id} — update user details */
-    @PutMapping("/users/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id,
+    /** PUT /api/admin/users/{publicId} — update user details */
+    @PutMapping("/users/{publicId}")
+    public ResponseEntity<User> updateUser(@PathVariable UUID publicId,
                                            @Valid @RequestBody AdminUserRequest request) {
-        return ResponseEntity.ok(adminService.updateUser(id, request));
+        return ResponseEntity.ok(adminService.updateUserByPublicId(publicId, request));
     }
 
-    /** PUT /api/admin/users/{id}/enable */
-    @PutMapping("/users/{id}/enable")
-    public ResponseEntity<Map<String, String>> enableUser(@PathVariable Long id) {
-        adminService.setUserEnabled(id, true);
+    /** PUT /api/admin/users/id/{id} — numeric id update (frontend compatibility) */
+    @PutMapping("/users/id/{id}")
+    public ResponseEntity<User> updateUserById(@PathVariable Long id,
+                                               @Valid @RequestBody AdminUserRequest request) {
+        User user = adminService.getAllUsers().stream()
+                .filter(u -> id.equals(u.getId()))
+                .findFirst()
+                .orElseThrow(() -> new com.monocampusconnect.exception.ApiException("User not found", 404));
+        return ResponseEntity.ok(adminService.updateUserByPublicId(user.getUsersPublicId(), request));
+    }
+
+    /** PUT /api/admin/users/{publicId}/enable */
+    @PutMapping("/users/{publicId}/enable")
+    public ResponseEntity<Map<String, String>> enableUser(@PathVariable UUID publicId) {
+        adminService.setUserEnabledByPublicId(publicId, true);
         return ResponseEntity.ok(Map.of("message", "User enabled successfully"));
     }
 
-    /** PUT /api/admin/users/{id}/disable */
-    @PutMapping("/users/{id}/disable")
-    public ResponseEntity<Map<String, String>> disableUser(@PathVariable Long id) {
-        adminService.setUserEnabled(id, false);
+    /** PUT /api/admin/users/id/{id}/enable — numeric id enable (frontend compatibility) */
+    @PutMapping("/users/id/{id}/enable")
+    public ResponseEntity<Map<String, String>> enableUserById(@PathVariable Long id) {
+        User user = adminService.getAllUsers().stream()
+                .filter(u -> id.equals(u.getId()))
+                .findFirst()
+                .orElseThrow(() -> new com.monocampusconnect.exception.ApiException("User not found", 404));
+        adminService.setUserEnabledByPublicId(user.getUsersPublicId(), true);
+        return ResponseEntity.ok(Map.of("message", "User enabled successfully"));
+    }
+
+    /** PUT /api/admin/users/{publicId}/disable */
+    @PutMapping("/users/{publicId}/disable")
+    public ResponseEntity<Map<String, String>> disableUser(@PathVariable UUID publicId) {
+        adminService.setUserEnabledByPublicId(publicId, false);
         return ResponseEntity.ok(Map.of("message", "User disabled successfully"));
     }
 
-    /** DELETE /api/admin/users/{id} */
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
-        adminService.deleteUser(id);
+    /** PUT /api/admin/users/id/{id}/disable — numeric id disable (frontend compatibility) */
+    @PutMapping("/users/id/{id}/disable")
+    public ResponseEntity<Map<String, String>> disableUserById(@PathVariable Long id) {
+        User user = adminService.getAllUsers().stream()
+                .filter(u -> id.equals(u.getId()))
+                .findFirst()
+                .orElseThrow(() -> new com.monocampusconnect.exception.ApiException("User not found", 404));
+        adminService.setUserEnabledByPublicId(user.getUsersPublicId(), false);
+        return ResponseEntity.ok(Map.of("message", "User disabled successfully"));
+    }
+
+    /** DELETE /api/admin/users/{publicId} */
+    @DeleteMapping("/users/{publicId}")
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID publicId) {
+        adminService.deleteUserByPublicId(publicId);
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+    }
+
+    /** DELETE /api/admin/users/id/{id} — numeric id delete (frontend compatibility) */
+    @DeleteMapping("/users/id/{id}")
+    public ResponseEntity<Map<String, String>> deleteUserById(@PathVariable Long id) {
+        User user = adminService.getAllUsers().stream()
+                .filter(u -> id.equals(u.getId()))
+                .findFirst()
+                .orElseThrow(() -> new com.monocampusconnect.exception.ApiException("User not found", 404));
+        adminService.deleteUserByPublicId(user.getUsersPublicId());
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
 }
-

@@ -4,8 +4,13 @@ import com.monocampusconnect.config.TenantContextHolder;
 import com.monocampusconnect.dto.AdminDashboardStats;
 import com.monocampusconnect.dto.AdminUserRequest;
 import com.monocampusconnect.exception.ApiException;
+import com.monocampusconnect.model.Role;
 import com.monocampusconnect.model.User;
-import com.monocampusconnect.repository.*;
+import com.monocampusconnect.repository.UserRepository;
+import com.monocampusconnect.repository.postgres.CourseCanonicalRepository;
+import com.monocampusconnect.repository.postgres.DepartmentCanonicalRepository;
+import com.monocampusconnect.repository.postgres.ExamCanonicalRepository;
+import com.monocampusconnect.repository.postgres.MarkRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,13 +24,12 @@ import java.util.UUID;
 public class AdminService {
 
     @Autowired private UserRepository userRepository;
-    @Autowired private CourseRepository courseRepository;
-    @Autowired private ExamRepository examRepository;
-    @Autowired private ResultRepository resultRepository;
-    @Autowired private MaterialRepository materialRepository;
-    @Autowired private EventRepository eventRepository;
-    @Autowired private DepartmentRepository departmentRepository;
+    @Autowired private CourseCanonicalRepository courseCanonicalRepository;
+    @Autowired private ExamCanonicalRepository examCanonicalRepository;
+    @Autowired private MarkRepository markRepository;
+    @Autowired private DepartmentCanonicalRepository departmentCanonicalRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private RoleService roleService;
 
     private UUID currentTenant() {
         UUID tenantId = TenantContextHolder.getTenantId();
@@ -43,14 +47,8 @@ public class AdminService {
             throw new ApiException("Email already in use in this college: " + request.getEmail(), 409);
         }
 
-        User.Role role;
-        try {
-            role = User.Role.valueOf(request.getRole().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException("Invalid role: " + request.getRole() + ". Must be FACULTY or STUDENT", 400);
-        }
-
-        if (role == User.Role.SUPER_ADMIN) {
+        Role.RoleName roleName = roleService.parseRoleName(request.getRole());
+        if (roleName == Role.RoleName.SUPER_ADMIN) {
             throw new ApiException("Cannot create SUPER_ADMIN via this endpoint", 403);
         }
 
@@ -60,7 +58,6 @@ public class AdminService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setRole(role);
         user.setDepartment(request.getDepartment());
         user.setSemester(request.getSemester());
         user.setEnrollmentNumber(request.getEnrollmentNumber());
@@ -72,7 +69,10 @@ public class AdminService {
         user.setCreatedAt(new Date());
         user.setUpdatedAt(new Date());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        roleService.assignInitialRole(savedUser, roleName);
+
+        return savedUser;
     }
 
     public List<User> getAllUsers() {
@@ -80,13 +80,7 @@ public class AdminService {
     }
 
     public List<User> getUsersByRole(String roleName) {
-        User.Role role;
-        try {
-            role = User.Role.valueOf(roleName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException("Invalid role: " + roleName, 400);
-        }
-        return userRepository.findByTenantIdAndRole(currentTenant(), role);
+        return roleService.getUsersByRole(roleService.parseRoleName(roleName), currentTenant());
     }
 
     public User getUserById(Long userId) {
@@ -97,6 +91,12 @@ public class AdminService {
             throw new ApiException("User not found in this college", 404);
         }
         return user;
+    }
+
+    public User getUserByPublicId(UUID userPublicId) {
+        UUID tenantId = currentTenant();
+        return userRepository.findByUsersPublicIdAndTenantId(userPublicId, tenantId)
+                .orElseThrow(() -> new ApiException("User not found in this college", 404));
     }
 
     @Transactional
@@ -122,6 +122,11 @@ public class AdminService {
     }
 
     @Transactional
+    public User updateUserByPublicId(UUID userPublicId, AdminUserRequest request) {
+        return updateUser(getUserByPublicId(userPublicId).getId(), request);
+    }
+
+    @Transactional
     public void setUserEnabled(Long userId, boolean enabled) {
         User user = getUserById(userId);
         user.setEnabled(enabled);
@@ -130,9 +135,19 @@ public class AdminService {
     }
 
     @Transactional
+    public void setUserEnabledByPublicId(UUID userPublicId, boolean enabled) {
+        setUserEnabled(getUserByPublicId(userPublicId).getId(), enabled);
+    }
+
+    @Transactional
     public void deleteUser(Long userId) {
         User user = getUserById(userId);
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteUserByPublicId(UUID userPublicId) {
+        deleteUser(getUserByPublicId(userPublicId).getId());
     }
 
     // ─── Dashboard Stats ─────────────────────────────────────────────────────
@@ -140,15 +155,12 @@ public class AdminService {
     public AdminDashboardStats getDashboardStats() {
         UUID tenantId = currentTenant();
         AdminDashboardStats stats = new AdminDashboardStats();
-        stats.setTotalStudents(userRepository.countByTenantIdAndRole(tenantId, User.Role.STUDENT));
-        stats.setTotalFaculty(userRepository.countByTenantIdAndRole(tenantId, User.Role.FACULTY));
-        stats.setTotalCourses(courseRepository.countByTenantId(tenantId));
-        stats.setTotalExams(examRepository.countByTenantId(tenantId));
-        stats.setTotalMaterials(materialRepository.countByTenantId(tenantId));
-        stats.setTotalEvents(eventRepository.countByTenantId(tenantId));
-        stats.setTotalDepartments(departmentRepository.countByTenantId(tenantId));
-        stats.setTotalResults(resultRepository.countByTenantId(tenantId));
+        stats.setTotalStudents(roleService.countUsersByRole(Role.RoleName.STUDENT, tenantId));
+        stats.setTotalFaculty(roleService.countUsersByRole(Role.RoleName.FACULTY, tenantId));
+        stats.setTotalCourses(courseCanonicalRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId).size());
+        stats.setTotalExams(examCanonicalRepository.count());
+        stats.setTotalDepartments(departmentCanonicalRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId).size());
+        stats.setTotalResults(markRepository.count());
         return stats;
     }
 }
-

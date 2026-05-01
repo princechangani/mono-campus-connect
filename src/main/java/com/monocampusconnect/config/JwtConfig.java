@@ -10,8 +10,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -19,7 +22,7 @@ import java.util.function.Function;
 @Component
 public class JwtConfig {
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:86400000}")
     private Long expiration;
 
     // Strong, fixed secret key (base64-encoded, at least 256 bits)
@@ -30,14 +33,24 @@ public class JwtConfig {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // ─── Claim Extractors ────────────────────────────────────────────────────
-
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> {
+            Object rolesObj = claims.get("roles");
+            if (rolesObj instanceof List<?>) {
+                return (List<String>) rolesObj;
+            }
+            String singleRole = claims.get("role", String.class);
+            return singleRole != null ? List.of(singleRole) : List.of();
+        });
     }
 
     public Long extractUserId(String token) {
@@ -69,16 +82,20 @@ public class JwtConfig {
         return extractExpiration(token).before(new Date());
     }
 
-    // ─── Token Generation ────────────────────────────────────────────────────
-
-    /** Generate token with full claims (tenantId, userId, role) */
-    public String generateToken(User user) {
+    /** Generate token embedding all roles from the user_role_mapping table */
+    public String generateToken(User user, Collection<String> roleNames) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole().name());
-        claims.put("userId", user.getId());
+        List<String> roles = roleNames == null || roleNames.isEmpty()
+                ? List.of("USER")
+                : new ArrayList<>(roleNames);
+
+        claims.put("role", roles.get(0));
+        claims.put("roles", roles);
+        claims.put("userId", user.getUserId());
         if (user.getTenantId() != null) {
             claims.put("tenantId", user.getTenantId().toString());
         }
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
@@ -88,7 +105,12 @@ public class JwtConfig {
                 .compact();
     }
 
-    /** Legacy overload kept for compatibility — prefer generateToken(User) */
+    /** Legacy overload kept for compatibility. */
+    public String generateToken(User user) {
+        return generateToken(user, List.of());
+    }
+
+    /** Legacy overload kept for compatibility — prefer generateToken(User, roles). */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
@@ -99,8 +121,6 @@ public class JwtConfig {
                 .signWith(getSigningKey())
                 .compact();
     }
-
-    // ─── Validation ──────────────────────────────────────────────────────────
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -118,7 +138,7 @@ public class JwtConfig {
 
     public boolean isAdmin(String token) {
         try {
-            return "ADMIN".equalsIgnoreCase(extractRole(token));
+            return extractRoles(token).stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r));
         } catch (Exception e) {
             return false;
         }
@@ -126,8 +146,8 @@ public class JwtConfig {
 
     public boolean isAdminOrFaculty(String token) {
         try {
-            String role = extractRole(token);
-            return "FACULTY".equals(role) || "ADMIN".equals(role);
+            List<String> roles = extractRoles(token);
+            return roles.contains("FACULTY") || roles.contains("ADMIN");
         } catch (Exception e) {
             return false;
         }

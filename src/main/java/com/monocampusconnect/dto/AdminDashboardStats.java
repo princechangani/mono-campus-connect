@@ -8,8 +8,6 @@ public class AdminDashboardStats {
     private long totalFaculty;
     private long totalCourses;
     private long totalExams;
-    private long totalMaterials;
-    private long totalEvents;
     private long totalDepartments;
     private long totalResults;
 }

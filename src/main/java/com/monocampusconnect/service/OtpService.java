@@ -13,6 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class OtpService {
@@ -34,6 +40,24 @@ public class OtpService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    // Rate Limiting: max 3 requests per 15 minutes per email
+    private final Map<String, Queue<Instant>> requestHistory = new ConcurrentHashMap<>();
+
+    private void checkRateLimit(String email) {
+        Queue<Instant> history = requestHistory.computeIfAbsent(email, k -> new LinkedList<>());
+        Instant now = Instant.now();
+        
+        // Remove requests older than 15 minutes
+        while (!history.isEmpty() && history.peek().isBefore(now.minus(15, ChronoUnit.MINUTES))) {
+            history.poll();
+        }
+
+        if (history.size() >= 3) {
+            throw new ApiException("Too many OTP requests. Please try again after 15 minutes.", 429);
+        }
+        history.add(now);
+    }
+
     /**
      * Generate a 6-digit OTP, store it, and send via email.
      */
@@ -44,6 +68,8 @@ public class OtpService {
             userRepository.findByEmail(email)
                     .orElseThrow(() -> new ApiException("No account found with email: " + email, 404));
         }
+
+        checkRateLimit(email);
 
         // Delete old OTPs for same email+purpose
         otpTokenRepository.deleteAllByEmailAndPurpose(email, purpose);

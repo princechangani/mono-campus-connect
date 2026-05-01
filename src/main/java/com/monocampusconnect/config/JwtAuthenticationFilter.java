@@ -15,8 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Runs once per request. Validates the JWT, sets the SecurityContext,
@@ -62,9 +63,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Build authorities from role claim (avoids DB hit for role)
-                String authorityName = (role != null) ? "ROLE_" + role : "ROLE_USER";
-                var authorities = Collections.singletonList(new SimpleGrantedAuthority(authorityName));
+                // Build authorities from all roles in the token
+                List<String> roles = jwtConfig.extractRoles(token);
+                var authorities = roles.stream()
+                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                        .collect(Collectors.toList());
+                // Fallback to single role claim if roles list is empty
+                if (authorities.isEmpty()) {
+                    String singleRole = jwtConfig.extractRole(token);
+                    String authorityName = (singleRole != null) ? "ROLE_" + singleRole : "ROLE_USER";
+                    authorities = List.of(new SimpleGrantedAuthority(authorityName));
+                }
 
                 UserDetails userDetails = profileService.loadUserByUsername(username);
 
